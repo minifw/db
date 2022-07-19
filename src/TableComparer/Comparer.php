@@ -3,21 +3,17 @@
 namespace Minifw\DB\TableComparer;
 
 use Exception;
+use Minifw\DB\TableInfo\Info;
 
 abstract class Comparer
 {
-    protected array $newCfg;
-    protected ?array $oldCfg;
     protected string $tbname;
     protected array $diffDisplay;
     protected array $diffTrans;
 
-    public function __construct(array $newCfg, ?array $oldCfg)
+    public function __construct(string $tbname)
     {
-        $this->newCfg = $newCfg;
-        $this->oldCfg = $oldCfg;
-
-        $this->tbname = $newCfg['tbname'];
+        $this->tbname = $tbname;
     }
 
     public function getDiff() : array

@@ -21,6 +21,7 @@ namespace Minifw\DB\SqlParser;
 
 use Minifw\Common\Exception;
 use Minifw\DB;
+use Minifw\DB\TableInfo\Info;
 
 abstract class Parser
 {
@@ -192,7 +193,7 @@ abstract class Parser
         return $sql;
     }
 
-    public function parse() : array
+    public function parse() : Info
     {
         try {
             return $this->_parse();
@@ -204,5 +205,5 @@ abstract class Parser
         }
     }
 
-    abstract protected function _parse() : array;
+    abstract protected function _parse() : Info;
 }

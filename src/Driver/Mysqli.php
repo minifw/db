@@ -21,6 +21,9 @@ namespace Minifw\DB\Driver;
 
 use Minifw\Common\Exception;
 use Minifw\DB;
+use Minifw\DB\TableInfo\Info;
+use Minifw\DB\TableInfo\MysqliTableInfo;
+use Minifw\DB\TableInfo\MysqliViewInfo;
 
 class Mysqli extends DB\Driver\Driver
 {
@@ -121,7 +124,7 @@ class Mysqli extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : array
+    public function getTableInfo(string $table) : Info
     {
         $create_sql = $this->showCreate($table);
 
@@ -145,15 +148,19 @@ class Mysqli extends DB\Driver\Driver
         return $info;
     }
 
-    public function getComparer(array $new_cfg, ?array $old_cfg) : DB\TableComparer\Comparer
+    public function getComparer(Info $new_cfg, ?Info $old_cfg) : DB\TableComparer\Comparer
     {
-        if ($old_cfg !== null && $new_cfg['type'] != $old_cfg['type']) {
+        if ($old_cfg !== null && !($new_cfg instanceof $old_cfg)) {
             throw new Exception('不支持的操做');
         }
 
-        if ($new_cfg['type'] == 'table') {
+        if ($new_cfg->driverName !== 'mysqli' || ($old_cfg !== null && $old_cfg->driverName !== 'mysqli')) {
+            throw new Exception('不支持的操做');
+        }
+
+        if ($new_cfg instanceof MysqliTableInfo) {
             return new DB\TableComparer\MysqlTableComparer($new_cfg, $old_cfg);
-        } elseif ($new_cfg['type'] == 'view') {
+        } elseif ($new_cfg instanceof MysqliViewInfo) {
             $user = $this->getUser();
 
             return new DB\TableComparer\MysqlViewComparer($new_cfg, $old_cfg, $user);

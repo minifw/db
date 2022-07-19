@@ -21,6 +21,7 @@ namespace Minifw\DB\SqlParser;
 
 use Minifw\Common\Exception;
 use Minifw\DB;
+use Minifw\DB\TableInfo\Info;
 
 class MysqlCreateTable extends Parser
 {
@@ -49,20 +50,23 @@ class MysqlCreateTable extends Parser
         $this->table_status = $status;
     }
 
-    protected function _parse() : array
+    protected function _parse() : Info
     {
         $this->_parseTableName();
         $this->_parseTableContent();
         $this->_parseTableStatus();
         $this->_mergeDefined();
 
-        return [
+        $info = [
             'type' => 'table',
+            'driver' => 'mysqli',
             'tbname' => $this->tbname,
             'status' => $this->status,
             'field' => $this->fields,
             'index' => $this->indexs,
         ];
+
+        return Info::load($info, Info::FORMAT_ARRAY, false);
     }
 
     ///////////////////////////////////////////

@@ -9,13 +9,14 @@ require __DIR__ . '/../bootstrap.php';
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
 use Minifw\DB\TableUtils;
+use Minifw\DB\TableInfo\Info;
 
 $driver = new Mysqli($config['mysql']);
 Query::setDefaultDriver($driver);
 
 Query::get()->query('drop table if exists `test_table`');
 
-$info = TableUtils::getInfoFromFile(__DIR__ . '/test_table.json', TableUtils::FORMAT_JSON);
+$info = Info::load(__DIR__ . '/test_table.json', Info::FORMAT_JSON, true);
 $table_diff = TableUtils::dbCmp($driver, $info);
 TableUtils::dbApply($driver, $table_diff);
 

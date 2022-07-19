@@ -42,7 +42,7 @@ abstract class Table
 
     public function query() : Query
     {
-        return Query::get(static::$tbname);
+        return Query::get(static::$tbname, $this->driver);
     }
 
     public function add(array $post) : void

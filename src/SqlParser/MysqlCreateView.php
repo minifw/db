@@ -3,6 +3,7 @@
 namespace Minifw\DB\SqlParser;
 
 use Minifw\Common\Exception;
+use Minifw\DB\TableInfo\Info;
 
 class MysqlCreateView extends Parser
 {
@@ -22,7 +23,23 @@ class MysqlCreateView extends Parser
         $this->viewSql = '';
     }
 
-    protected function _parse() : array
+    protected function _parse() : Info
+    {
+        $this->_parseSql();
+
+        $info = [
+            'type' => 'view',
+            'driver' => 'mysqli',
+            'tbname' => $this->tbname,
+            'algorithm' => $this->algorithm,
+            'security' => $this->sqlSecurity,
+            'sql' => $this->viewSql,
+        ];
+
+        return Info::load($info, Info::FORMAT_ARRAY, false);
+    }
+
+    protected function _parseSql()
     {
         $token = $this->nextToken();
         if ($token[0] !== self::TYPE_KEYWORD || $token[1] !== 'CREATE') {
@@ -110,13 +127,5 @@ class MysqlCreateView extends Parser
         }
 
         $this->viewSql = trim($this->nextAll());
-
-        return [
-            'type' => 'view',
-            'tbname' => $this->tbname,
-            'algorithm' => $this->algorithm,
-            'sql_security' => $this->sqlSecurity,
-            'view_sql' => $this->viewSql,
-        ];
     }
 }

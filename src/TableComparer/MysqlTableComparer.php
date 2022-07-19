@@ -4,9 +4,12 @@ namespace Minifw\DB\TableComparer;
 
 use Exception;
 use Minifw\DB\SqlBuilder\BuilderMysql;
+use Minifw\DB\TableInfo\MysqliTableInfo;
 
 class MysqlTableComparer extends Comparer
 {
+    protected MysqliTableInfo $newCfg;
+    protected ?MysqliTableInfo $oldCfg;
     protected array $lastSql;
     protected string $fromCharset;
     protected string $fromCollate;
@@ -15,9 +18,11 @@ class MysqlTableComparer extends Comparer
     protected array $fieldRemoved;
     protected array $fieldAdd;
 
-    public function __construct(array $newCfg, ?array $oldCfg)
+    public function __construct(MysqliTableInfo $newCfg, ?MysqliTableInfo $oldCfg)
     {
-        parent::__construct($newCfg, $oldCfg);
+        parent::__construct($newCfg->tbname);
+        $this->newCfg = $newCfg;
+        $this->oldCfg = $oldCfg;
     }
 
     ///////////////////////////////
@@ -41,8 +46,8 @@ class MysqlTableComparer extends Comparer
     /////////////////////////
     protected function calcStatusDiff() : void
     {
-        $from = $this->oldCfg['status'];
-        $to = $this->newCfg['status'];
+        $from = $this->oldCfg->status;
+        $to = $this->newCfg->status;
 
         $fields = [
             'comment' => '',
@@ -104,8 +109,8 @@ class MysqlTableComparer extends Comparer
 
     protected function calcFieldDel() : void
     {
-        $from = $this->oldCfg['field'];
-        $to = $this->newCfg['field'];
+        $from = $this->oldCfg->field;
+        $to = $this->newCfg->field;
 
         $i = 0;
         foreach ($from as $k => $v) {
@@ -124,8 +129,8 @@ class MysqlTableComparer extends Comparer
 
     protected function calcFieldAdd() : void
     {
-        $from = $this->oldCfg['field'];
-        $to = $this->newCfg['field'];
+        $from = $this->oldCfg->field;
+        $to = $this->newCfg->field;
 
         $i = 0;
         $tail = ' first';
@@ -156,8 +161,8 @@ class MysqlTableComparer extends Comparer
 
     protected function calcFieldChange() : void
     {
-        $from = $this->oldCfg['field'];
-        $to = $this->newCfg['field'];
+        $from = $this->oldCfg->field;
+        $to = $this->newCfg->field;
 
         $i = 1;
         $left = 1;
@@ -208,8 +213,8 @@ class MysqlTableComparer extends Comparer
 
     protected function calcIndexDiff() : void
     {
-        $from = $this->oldCfg['index'];
-        $to = $this->newCfg['index'];
+        $from = $this->oldCfg->index;
+        $to = $this->newCfg->index;
 
         foreach ($to as $k => $v) {
             $to_sql = BuilderMysql::indexToSql($k, $v, false);
@@ -270,26 +275,26 @@ class MysqlTableComparer extends Comparer
         $cfg = $this->newCfg;
 
         $sql_display = BuilderMysql::sqlCreate(
-            $cfg['tbname'],
-            $cfg['status'],
-            $cfg['field'],
-            $cfg['index'],
+            $cfg->tbname,
+            $cfg->status,
+            $cfg->field,
+            $cfg->index,
             "\n+ "
         );
         $sql_exec = BuilderMysql::sqlCreate(
-            $cfg['tbname'],
-            $cfg['status'],
-            $cfg['field'],
-            $cfg['index'],
+            $cfg->tbname,
+            $cfg->status,
+            $cfg->field,
+            $cfg->index,
             "\n"
         );
 
         $this->diffDisplay[] = '+' . $sql_display;
         $this->diffTrans[] = $sql_exec . ';';
 
-        if (!empty($cfg['init_table_sql'])) {
-            $this->diffDisplay[] = '+' . $cfg['init_table_sql'];
-            $this->diffTrans[] = $cfg['init_table_sql'] . ';';
+        if (!empty($cfg->initTableSql)) {
+            $this->diffDisplay[] = '+' . $cfg->initTableSql;
+            $this->diffTrans[] = $cfg->initTableSql . ';';
         }
     }
 }

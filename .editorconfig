@@ -1,11 +1,11 @@
-[vendor/*]
+[/vendor/*]
 php_diagnostic = off
-[vendor-bin/*]
+[/vendor-bin/*]
 php_diagnostic = off
-[tmp/*]
+[/tmp/*]
 php_diagnostic = off
-[.*]
-php_diagnostic = off
+[*.phpt]
+php_diagnostic_php2432 = off
 [*]
 indent_size = 4
 indent_style = space

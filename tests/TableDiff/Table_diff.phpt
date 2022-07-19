@@ -11,10 +11,9 @@ require __DIR__ . '/../bootstrap.php';
 
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
-use Minifw\DB\Table;
 use Minifw\DB\TableUtils;
-use Minifw\Common\FileUtils;
 use Minifw\Common\File;
+use Minifw\DB\TableInfo\Info;
 
 $driver = new Mysqli($config['mysql']);
 Query::setDefaultDriver($driver);
@@ -28,9 +27,7 @@ if (file_exists(APP_ROOT . '/tmp/tests/db')) {
 }
 
 $dirList = [
-    ['name' => 'json', 'format' => TableUtils::FORMAT_JSON],
-    //['name' => 'array', 'format' => TableUtils::FORMAT_ARRAY],
-    //['name' => 'php', 'format' => TableUtils::FORMAT_SERIALIZE],
+    ['name' => 'json', 'format' => Info::FORMAT_JSON],
 ];
 
 foreach ($dirList as $dirInfo) {
@@ -120,11 +117,11 @@ function testObjCreate($driver)
     echo '== create test of ' . " obj begin ==\n";
 
     $dir = __DIR__ . '/old/obj';
-    $diff = TableUtils::obj2dbCmpAll(__NAMESPACE__, $dir);
+    $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
     var_dump(count($diff));
 
-    TableUtils::obj2dbApplyAll(__NAMESPACE__, $dir);
-    $diff = TableUtils::obj2dbCmpAll(__NAMESPACE__, $dir);
+    TableUtils::obj2dbApplyAll($driver, __NAMESPACE__, $dir);
+    $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
     var_dump($diff);
 
     echo '== create test of ' . " obj end ==\n";
@@ -135,11 +132,11 @@ function testObjDiff($driver)
     echo '== diff test of ' . " obj begin ==\n";
 
     $dir = __DIR__ . '/new/obj';
-    $diff = TableUtils::obj2dbCmpAll(__NAMESPACE__, $dir);
+    $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
     var_dump(count($diff));
 
-    TableUtils::obj2dbApplyAll(__NAMESPACE__, $dir);
-    $diff = TableUtils::obj2dbCmpAll(__NAMESPACE__, $dir);
+    TableUtils::obj2dbApplyAll($driver, __NAMESPACE__, $dir);
+    $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
     var_dump($diff);
 
     echo '== diff test of ' . " obj end ==\n";

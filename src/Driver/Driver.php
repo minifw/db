@@ -22,6 +22,7 @@ namespace Minifw\DB\Driver;
 use Minifw\Common\Exception;
 use Minifw\DB\Query;
 use PDO;
+use Minifw\DB\TableInfo\Info;
 
 abstract class Driver
 {
@@ -235,9 +236,9 @@ abstract class Driver
 
     abstract public function getTables() : array;
 
-    abstract public function getComparer(array $new_cfg, ?array $old_cfg) : \Minifw\DB\TableComparer\Comparer;
+    abstract public function getComparer(Info $new_cfg, ?Info $old_cfg) : \Minifw\DB\TableComparer\Comparer;
 
     abstract public function showCreate(string $table) : string;
 
-    abstract public function getTableInfo(string $table) : array;
+    abstract public function getTableInfo(string $table) : Info;
 }

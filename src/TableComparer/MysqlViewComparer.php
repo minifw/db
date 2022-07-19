@@ -4,14 +4,19 @@ namespace Minifw\DB\TableComparer;
 
 use Exception;
 use Minifw\DB\SqlBuilder\BuilderMysql;
+use Minifw\DB\TableInfo\MysqliViewInfo;
 
 class MysqlViewComparer extends Comparer
 {
+    protected MysqliViewInfo $newCfg;
+    protected ?MysqliViewInfo $oldCfg;
     protected string $user = '';
 
-    public function __construct(array $newCfg, ?array $oldCfg, string $user)
+    public function __construct(MysqliViewInfo $newCfg, ?MysqliViewInfo $oldCfg, string $user)
     {
-        parent::__construct($newCfg, $oldCfg);
+        parent::__construct($newCfg->tbname);
+        $this->newCfg = $newCfg;
+        $this->oldCfg = $oldCfg;
         $this->user = $user;
     }
 
@@ -19,7 +24,13 @@ class MysqlViewComparer extends Comparer
     protected function calcDiff() : void
     {
         if (empty($this->oldCfg)) {
-            $sql = BuilderMysql::sqlCreateView($this->tbname, $this->newCfg['algorithm'], $this->user, $this->newCfg['sql_security'], $this->newCfg['view_sql']);
+            $sql = BuilderMysql::sqlCreateView(
+                $this->tbname,
+                $this->newCfg->algorithm,
+                $this->user,
+                $this->newCfg->security,
+                $this->newCfg->sql
+            );
             $this->diffDisplay[] = '+ ' . $sql;
             $this->diffTrans[] = $sql;
 
@@ -27,24 +38,24 @@ class MysqlViewComparer extends Comparer
         }
 
         $changed = false;
-        if ($this->newCfg['algorithm'] != $this->oldCfg['algorithm']) {
+        if ($this->newCfg->algorithm != $this->oldCfg->algorithm) {
             $changed = true;
-            $this->diffDisplay[] = '- ALGORITHM=' . $this->oldCfg['algorithm'] . " \n+ ALGORITHM=" . $this->newCfg['algorithm'];
+            $this->diffDisplay[] = '- ALGORITHM=' . $this->oldCfg->algorithm . " \n+ ALGORITHM=" . $this->newCfg->algorithm;
         }
 
-        if ($this->newCfg['sql_security'] != $this->oldCfg['sql_security']) {
+        if ($this->newCfg->security != $this->oldCfg->security) {
             $changed = true;
-            $this->diffDisplay[] = '- SQL SECURITY=' . $this->oldCfg['sql_security'] . " \n+ SQL SECURITY=" . $this->newCfg['sql_security'];
+            $this->diffDisplay[] = '- SQL SECURITY=' . $this->oldCfg->security . " \n+ SQL SECURITY=" . $this->newCfg->security;
         }
 
-        if ($this->newCfg['view_sql'] != $this->oldCfg['view_sql']) {
+        if ($this->newCfg->sql != $this->oldCfg->sql) {
             $changed = true;
-            $this->diffDisplay[] = '- SQL=' . $this->oldCfg['view_sql'] . " \n+ SQL=" . $this->newCfg['view_sql'];
+            $this->diffDisplay[] = '- SQL=' . $this->oldCfg->sql . " \n+ SQL=" . $this->newCfg->sql;
         }
 
         if ($changed) {
             $this->diffTrans[] = 'DROP VIEW IF EXISTS `' . $this->tbname . '`';
-            $this->diffTrans[] = BuilderMysql::sqlCreateView($this->tbname, $this->newCfg['algorithm'], $this->user, $this->newCfg['sql_security'], $this->newCfg['view_sql']);
+            $this->diffTrans[] = BuilderMysql::sqlCreateView($this->tbname, $this->newCfg->algorithm, $this->user, $this->newCfg->security, $this->newCfg->sql);
         }
     }
 }
