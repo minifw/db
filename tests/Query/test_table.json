@@ -1,0 +1,44 @@
+{
+    "type": "table",
+    "tbname": "test_table",
+    "status": {
+        "engine": "InnoDB",
+        "charset": "utf8mb4",
+        "collate": "utf8mb4_general_ci",
+        "comment": "测试表"
+    },
+    "field": {
+        "id": {
+            "type": "int(10) unsigned",
+            "extra": "auto_increment",
+            "comment": "ID"
+        },
+        "age": {
+            "type": "int(11)",
+            "comment": "年龄"
+        },
+        "name": {
+            "type": "varchar(200)",
+            "comment": "姓名"
+        },
+        "address": {
+            "type": "varchar(200)",
+            "default": "",
+            "comment": "地址"
+        },
+        "code": {
+            "type": "varchar(200)",
+            "default": "",
+            "comment": "代码"
+        }
+    },
+    "index": {
+        "PRIMARY": {
+            "fields": ["id"],
+            "comment": "主键"
+        },
+        "age": {
+            "fields": ["age"]
+        }
+    }
+}

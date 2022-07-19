@@ -1,0 +1,57 @@
+{
+    "type": "table",
+    "tbname": "table_with_all",
+    "status": {
+        "engine": "InnoDB",
+        "charset": "utf8mb3",
+        "collate": "utf8_general_ci",
+        "comment": "Table To Create"
+    },
+    "field": {
+        "id": {
+            "type": "int(10) unsigned",
+            "extra": "auto_increment",
+            "comment": "ID"
+        },
+        "intfield": {
+            "type": "int(11)",
+            "comment": "A int field"
+        },
+        "charfield": {
+            "type": "varchar(200)",
+            "comment": "A varchar field"
+        },
+        "textfield": {
+            "type": "text",
+            "charset": "utf8mb4",
+            "collate": "utf8mb4_general_ci",
+            "comment": "A new text field"
+        },
+        "intfield_def333": {
+            "type": "int(11)",
+            "default": "0",
+            "comment": "A int field333"
+        },
+        "charfield_def": {
+            "type": "varchar(200)",
+            "default": "",
+            "comment": "A varchar field"
+        }
+    },
+    "index": {
+        "PRIMARY": {
+            "fields": ["id"],
+            "comment": "主键"
+        },
+        "uniqueindex": {
+            "unique": true,
+            "fields": ["intfield"]
+        },
+        "mixfield": {
+            "fields": ["charfield", "intfield"]
+        },
+        "intfield": {
+            "fields": ["intfield", "charfield"]
+        }
+    }
+}

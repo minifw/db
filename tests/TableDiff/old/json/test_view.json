@@ -1,0 +1,7 @@
+{
+    "type": "view",
+    "tbname": "test_view",
+    "algorithm": "UNDEFINED",
+    "sql_security": "DEFINER",
+    "view_sql": "select `table_with_all`.`charfield` AS `charfield`,`table_with_all`.`textfield` AS `textfield` from `table_with_all`"
+}

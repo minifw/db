@@ -1,0 +1,17 @@
+{
+    "type": "table",
+    "tbname": "table_with_one",
+    "status": {
+        "engine": "InnoDB",
+        "charset": "utf8mb4",
+        "collate": "utf8mb4_general_ci",
+        "comment": "Table To Create"
+    },
+    "field": {
+        "intfield": {
+            "type": "int(11)",
+            "comment": "A int field"
+        }
+    },
+    "index": []
+}
