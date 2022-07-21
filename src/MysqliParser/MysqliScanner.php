@@ -17,14 +17,11 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\SqlParser;
+namespace Minifw\DB\MysqliParser;
 
 use Minifw\Common\Exception;
-use Minifw\DB;
-use Minifw\DB\TableInfo\Info;
-use Minifw\DB\Driver\Driver;
 
-abstract class Parser
+class MysqliScanner
 {
     protected string $sql = '';
     protected int $index = 0;
@@ -45,29 +42,76 @@ abstract class Parser
     ];
     public static string $escapeChar = '`';
     public static string $quoteChar = '\'';
-    const TYPE_FIELD = 1;
-    const TYPE_STRING = 2;
-    const TYPE_KEYWORD = 3;
-    const TYPE_OPERATOR = 4;
-    public static array $type_hash = [
-        self::TYPE_FIELD => 'fld',
-        self::TYPE_STRING => 'str',
-        self::TYPE_KEYWORD => 'kwd',
-        self::TYPE_OPERATOR => 'opt'
-    ];
 
     public function __construct(string $sql)
     {
         $this->sql = $sql;
         $this->len = strlen($sql);
+        $this->tokenCache = [];
+        $this->index = 0;
     }
 
-    public function pushToken(array $token) : void
+    public function nextTokenIs(int $type, string $value, bool $throw = true) : bool
+    {
+        $token = $this->nextToken();
+        if ($token === null) {
+            if ($throw) {
+                throw new Exception('token提取出错');
+            } else {
+                return false;
+            }
+        }
+
+        if ($token->type !== $type || $token->value !== $value) {
+            $this->pushToken($token);
+            if ($throw) {
+                $msg = [
+                    $type => $token->type,
+                    $value => $token->value
+                ];
+                throw new Exception('token提取出错:' . json_encode($msg, JSON_UNESCAPED_UNICODE));
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function nextTokenAs(int $type, bool $throw = true) : ?string
+    {
+        $token = $this->nextToken();
+        if ($token === null) {
+            if ($throw) {
+                throw new Exception('token提取出错');
+            } else {
+                return null;
+            }
+        }
+
+        if ($token->type != $type) {
+            $this->pushToken($token);
+
+            if ($throw) {
+                $msg = [
+                    $type => $token->type,
+                    'value' => $token->value
+                ];
+                throw new Exception('token提取出错:' . json_encode($msg, JSON_UNESCAPED_UNICODE));
+            } else {
+                return null;
+            }
+        }
+
+        return $token->value;
+    }
+
+    public function pushToken(MysqliToken $token) : void
     {
         array_push($this->tokenCache, $token);
     }
 
-    public function nextToken() : ?array
+    public function nextToken() : ?MysqliToken
     {
         if (!empty($this->tokenCache)) {
             return array_pop($this->tokenCache);
@@ -80,18 +124,20 @@ abstract class Parser
         if ($char == self::$escapeChar) { //一个mysql域
             $name = $this->nextString(self::$escapeChar);
 
-            return [self::TYPE_FIELD, $name];
+            return new MysqliToken(MysqliToken::TYPE_FIELD, $name);
         } elseif ($char == self::$quoteChar) { //字符串
             $string = $this->nextString(self::$quoteChar);
 
-            return [self::TYPE_STRING, $string];
+            return new MysqliToken(MysqliToken::TYPE_STRING, $string);
         } elseif (isset(self::$oprator[$char])) {
-            return [self::TYPE_OPERATOR, $char];
+            return new MysqliToken(MysqliToken::TYPE_OPERATOR, $char);
         } else {
             $this->index--;
-            $word = $this->nextKeyword();
 
-            return [self::TYPE_KEYWORD, $word];
+            $word = $this->nextKeyword();
+            $word = strtoupper($word);
+
+            return new MysqliToken(MysqliToken::TYPE_KEYWORD, $word);
         }
     }
 
@@ -163,18 +209,18 @@ abstract class Parser
         $sql = '';
         while (!empty($this->tokenCache)) {
             $token = array_pop($this->tokenCache);
-            switch ($token[0]) {
-                case self::TYPE_STRING:
-                    $sql .= '\'' . str_replace('\'', '\'\'', $token[1]) . '\' ';
+            switch ($token->type) {
+                case MysqliToken::TYPE_STRING:
+                    $sql .= '\'' . str_replace('\'', '\'\'', $token->value) . '\' ';
                     break;
-                case self::TYPE_FIELD:
-                    $sql .= '`' . str_replace('`', '``', $token[1]) . '` ';
+                case MysqliToken::TYPE_FIELD:
+                    $sql .= '`' . str_replace('`', '``', $token->value) . '` ';
                     break;
-                case self::TYPE_OPERATOR:
-                    $sql .= $token[1];
+                case MysqliToken::TYPE_OPERATOR:
+                    $sql .= $token->value;
                     break;
-                case self::TYPE_KEYWORD:
-                    $sql .= $token[1] . ' ';
+                case MysqliToken::TYPE_KEYWORD:
+                    $sql .= $token->value . ' ';
                     break;
             }
         }
@@ -185,19 +231,19 @@ abstract class Parser
         return $sql;
     }
 
-    public function parse(Driver $driver) : Info
+    public function reset() : void
     {
         $this->tokenCache = [];
         $this->index = 0;
-        try {
-            return $this->_parse($driver);
-        } catch (Exception $ex) {
-            if ($ex->getCode() == 100) {
-                throw $ex;
-            }
-            throw new Exception('语法错误，位于:' . substr($this->sql, $this->index, 80) . "\n\n" . '完整语句：' . $this->sql . "\n\n" . '发生于：' . $ex->getFile() . '[' . $ex->getLine() . ']:' . $ex->getMessage(), -1);
-        }
     }
 
-    abstract protected function _parse(Driver $driver) : Info;
+    public function getPos() : string
+    {
+        return substr($this->sql, $this->index, 80);
+    }
+
+    public function getSql() : string
+    {
+        return $this->sql;
+    }
 }

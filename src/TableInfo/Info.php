@@ -192,7 +192,7 @@ abstract class Info
             }
             $this->tbname = $value;
         } else {
-            throw new Exception('非法操作');
+            throw new Exception('非法操作' . $name . ' => ' . $value);
         }
     }
 

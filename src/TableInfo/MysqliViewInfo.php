@@ -32,6 +32,7 @@ class MysqliViewInfo extends Info
     public function __construct(Driver $driver, ?array $info = null)
     {
         parent::__construct($driver, $info);
+        parent::set('type', 'view');
 
         if ($info === null) {
             return;
@@ -60,7 +61,10 @@ class MysqliViewInfo extends Info
             if (empty($value) || !is_string($value)) {
                 throw new Exception('数据不合法');
             }
-            $this->{$name} = (string) $value;
+            if ($name != 'sql') {
+                $value = strtolower($value);
+            }
+            $this->{$name} = $value;
         } else {
             parent::set($name, $value);
         }

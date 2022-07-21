@@ -27,11 +27,11 @@ class Field
 {
     protected string $name;
     protected string $type;
-    protected string $comment;
+    protected string $comment = '';
     protected string $charset = '';
     protected string $collate = '';
-    protected bool $nullable;
-    protected bool $autoIncrement;
+    protected bool $nullable = false;
+    protected bool $autoIncrement = false;
 
     /**
      * 可能会未初始化.
@@ -95,6 +95,9 @@ class Field
 
         if (isset($stringFields[$name])) {
             if (is_string($value) && $value !== '') {
+                if ($name == 'type') {
+                    $value = strtolower($value);
+                }
                 $this->{$name} = $value;
             } elseif ($stringFields[$name]) {
                 throw new Exception('列数据不合法');
@@ -107,6 +110,7 @@ class Field
             }
 
             if (self::isCharType($this->type)) {
+                $value = strtolower($value);
                 $this->{$name} = (string) $value;
             } else {
                 $this->{$name} = '';

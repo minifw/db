@@ -82,6 +82,7 @@ class TableUtils
     public static function dbCmp(Driver $driver, Info $newCfg) : TableDiff
     {
         $oldCfg = Info::loadFromDb($driver, $newCfg->tbname);
+
         return $newCfg->cmp($oldCfg);
     }
 

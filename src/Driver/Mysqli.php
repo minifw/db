@@ -22,8 +22,8 @@ namespace Minifw\DB\Driver;
 use Minifw\Common\Exception;
 use Minifw\DB;
 use Minifw\DB\TableInfo\Info;
-use Minifw\DB\TableInfo\MysqliTableInfo;
-use Minifw\DB\TableInfo\MysqliViewInfo;
+use Minifw\DB\MysqliParser\MysqliScanner;
+use Minifw\DB\MysqliParser\MysqliToken;
 
 class Mysqli extends DB\Driver\Driver
 {
@@ -140,21 +140,21 @@ class Mysqli extends DB\Driver\Driver
             return null;
         }
 
-        try {
+        $scaner = new MysqliScanner($create_sql);
+
+        $scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'CREATE');
+        $value = $scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+
+        if ($value == 'TABLE') {
             $status = $this->getTableStatus($table);
             $fields = $this->getColumns($table);
-
-            $parser = new DB\SqlParser\MysqlCreateTable($create_sql, $status, $fields);
+            $parser = new DB\MysqliParser\MysqliCreateTable($scaner, $status, $fields);
 
             return $parser->parse($this);
-        } catch (Exception $ex) {
-            if ($ex->getCode() == 100) {
-                $parser = new DB\SqlParser\MysqlCreateView($create_sql);
+        } else {
+            $parser = new DB\MysqliParser\MysqliCreateView($scaner);
 
-                return $parser->parse($this);
-            } else {
-                throw $ex;
-            }
+            return $parser->parse($this);
         }
     }
 }

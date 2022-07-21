@@ -25,10 +25,10 @@ use Minifw\Common\Exception;
 class Index
 {
     protected string $name;
-    protected bool $unique;
-    protected bool $fulltext;
+    protected bool $unique = false;
+    protected bool $fulltext = false;
     protected array $fields;
-    protected ?string $comment;
+    protected string $comment = '';
 
     public function __construct(?array $cfg = null)
     {

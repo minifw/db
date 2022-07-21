@@ -65,7 +65,11 @@ function testCreate($dirInfo, $driver)
 
     TableUtils::file2dbApplyAll($driver, $dir, $dirInfo['format']);
     $diff = TableUtils::file2dbCmpAll($driver, $dir, $dirInfo['format']);
-    var_dump($diff);
+
+    foreach ($diff as $one) {
+        echo $one->display();
+    }
+    var_dump(count($diff));
 
     echo '== create test of ' . $dirInfo['name'] . " end ==\n";
 }
@@ -102,7 +106,10 @@ function testDiff($dirInfo, $driver)
 
     TableUtils::file2dbApplyAll($driver, $dir, $dirInfo['format']);
     $diff = TableUtils::file2dbCmpAll($driver, $dir, $dirInfo['format']);
-    var_dump($diff);
+    foreach ($diff as $one) {
+        echo $one->display();
+    }
+    var_dump(count($diff));
 
     echo '== diff test of ' . $dirInfo['name'] . " end ==\n";
 }
@@ -123,7 +130,10 @@ function testObjCreate($driver)
 
     TableUtils::obj2dbApplyAll($driver, __NAMESPACE__, $dir);
     $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
-    var_dump($diff);
+    foreach ($diff as $one) {
+        echo $one->display();
+    }
+    var_dump(count($diff));
 
     echo '== create test of ' . " obj end ==\n";
 }
@@ -138,7 +148,10 @@ function testObjDiff($driver)
 
     TableUtils::obj2dbApplyAll($driver, __NAMESPACE__, $dir);
     $diff = TableUtils::obj2dbCmpAll($driver, __NAMESPACE__, $dir);
-    var_dump($diff);
+    foreach ($diff as $one) {
+        echo $one->display();
+    }
+    var_dump(count($diff));
 
     echo '== diff test of ' . " obj end ==\n";
 }
@@ -147,8 +160,7 @@ function testObjDiff($driver)
 --EXPECT--
 == create test of json begin ==
 int(3)
-array(0) {
-}
+int(0)
 == create test of json end ==
 == export test of json begin ==
 table_with_all
@@ -160,16 +172,13 @@ bool(true)
 == export test of json end ==
 == diff test of json begin ==
 int(3)
-array(0) {
-}
+int(0)
 == diff test of json end ==
 == create test of  obj begin ==
 int(2)
-array(0) {
-}
+int(0)
 == create test of  obj end ==
 == diff test of  obj begin ==
 int(2)
-array(0) {
-}
+int(0)
 == diff test of  obj end ==

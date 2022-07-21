@@ -44,6 +44,7 @@ class MysqliTableInfo extends Info
     public function __construct(Driver $driver, ?array $info = null)
     {
         parent::__construct($driver, $info);
+        parent::set('type', 'table');
 
         if ($info === null) {
             return;

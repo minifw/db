@@ -28,9 +28,9 @@ class Status
     protected string $engine;
     protected string $charset;
     protected string $collate;
-    protected string $comment;
-    protected ?string $checksum;
-    protected ?string $rowFormat;
+    protected string $comment = '';
+    protected string $checksum = '';
+    protected string $rowFormat = '';
 
     public function __get($name)
     {
@@ -75,7 +75,7 @@ class Status
                 $this->{$name} = '';
             }
         } else {
-            $this->{$name} = $value;
+            $this->{$name} = strtolower($value);
         }
     }
 
