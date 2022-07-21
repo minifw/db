@@ -4,27 +4,29 @@ namespace Minifw\DB\SqlParser;
 
 use Minifw\Common\Exception;
 use Minifw\DB\TableInfo\Info;
+use Minifw\DB\TableInfo\MysqliViewInfo;
 
 class MysqlCreateView extends Parser
 {
-    protected $tbname = null;
-    protected $algorithm = '';
-    protected $definer = '';
-    protected $sqlSecurity = '';
-    protected $viewSql = '';
+    protected string $tbname;
+    protected ?string $algorithm;
+    protected ?string $definer;
+    protected ?string $sqlSecurity;
+    protected string $viewSql;
 
-    public function init(string $sql, ?array $status = null, array $fields = []) : void
+    public function __construct(string $sql)
     {
-        parent::init($sql);
-        $this->tbname = null;
-        $this->algorithm = '';
-        $this->definer = '';
-        $this->sqlSecurity = '';
-        $this->viewSql = '';
+        parent::__construct($sql);
     }
 
-    protected function _parse() : array
+    protected function _parse($driver) : MysqliViewInfo
     {
+        $this->tbname = '';
+        $this->viewSql = '';
+        $this->algorithm = null;
+        $this->definer = null;
+        $this->sqlSecurity = null;
+
         $this->_parseSql();
 
         $info = [
@@ -35,7 +37,7 @@ class MysqlCreateView extends Parser
             'sql' => $this->viewSql,
         ];
 
-        return $info;
+        return new MysqliViewInfo($driver, $info);
     }
 
     protected function _parseSql()

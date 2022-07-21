@@ -33,58 +33,91 @@ class MysqliTableInfo extends Info
     /**
      * @var array<Field>
      */
-    protected array $field;
+    protected array $field = [];
 
     /**
      * @var array<Index>
      */
-    protected array $index;
-    protected string $initTableSql;
+    protected array $index = [];
+    protected string $initTableSql = '';
 
-    protected function __construct(Driver $driver, array $info)
+    public function __construct(Driver $driver, ?array $info = null)
     {
         parent::__construct($driver, $info);
 
-        $fields = ['status', 'field'];
-        foreach ($fields as $fname) {
-            if (empty($info[$fname]) || !is_array($info[$fname])) {
-                throw new Exception('数据不合法');
-            }
+        if ($info === null) {
+            return;
         }
 
-        $this->status = new Status($info['status']);
+        if (!isset($info['status'])) {
+            throw new Exception('数据不合法');
+        }
+        $status = new Status($info['status']);
+        $this->set('status', $status);
 
-        $this->field = [];
+        if (empty($info['field'])) {
+            throw new Exception('数据不合法');
+        }
+
         foreach ($info['field'] as $key => $value) {
             if (!isset($value['name'])) {
                 $value['name'] = $key;
             }
             $field = new Field($value, $this->status->charset, $this->status->collate);
-            $this->field[$field->getName()] = $field;
+            $this->set('field', $field);
         }
 
         if (!isset($info['index']) || !is_array($info['index'])) {
             throw new Exception('数据不合法');
         }
 
-        $this->index = [];
         foreach ($info['index'] as $key => $value) {
             if (!isset($value['name'])) {
                 $value['name'] = $key;
             }
             $index = new Index($value);
-            $this->index[$index->getName()] = $index;
+            $this->set('index', $index);
         }
 
         if (!empty($info['initTableSql'])) {
-            $this->initTableSql = strval($info['initTableSql']);
+            $this->set('initTableSql', (string) $info['initTableSql']);
+        }
+    }
+
+    public function set(string $name, $value) : void
+    {
+        if ($name === 'status') {
+            if (!($value instanceof Status)) {
+                throw new Exception('数据不合法');
+            }
+            $value->validate();
+            $this->status = $value;
+        } elseif ($name === 'field') {
+            if (!($value instanceof Field)) {
+                throw new Exception('数据不合法');
+            }
+            $value->validate();
+            $this->field[$value->getName()] = $value;
+        } elseif ($name === 'index') {
+            if (!($value instanceof Index)) {
+                throw new Exception('数据不合法');
+            }
+            $value->validate();
+            $this->index[$value->getName()] = $value;
+        } elseif ($name === 'initTableSql') {
+            if (!is_string($value)) {
+                throw new Exception('数据不合法');
+            }
+            $this->initTableSql = (string) $value;
         } else {
-            $this->initTableSql = '';
+            parent::set($name, $value);
         }
     }
 
     protected function toArray() : array
     {
+        $this->validate();
+
         $ret = parent::toArray();
 
         $ret['status'] = $this->status->toArray();
@@ -108,6 +141,8 @@ class MysqliTableInfo extends Info
 
     public function toSql($dim) : string
     {
+        $this->validate();
+
         $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->tbname . '` (' . $dim;
         $lines = [];
 
@@ -125,12 +160,30 @@ class MysqliTableInfo extends Info
         return $sql;
     }
 
+    public function validate() : void
+    {
+        parent::validate();
+
+        if (!isset($this->status)) {
+            throw new Exception('对象未初始化');
+        }
+
+        if (empty($this->field)) {
+            throw new Exception('对象未初始化');
+        }
+    }
+
     /////////////////////////////
 
     public function cmp(?Info $oldInfo) : TableDiff
     {
         if ($oldInfo !== null && !($oldInfo instanceof self)) {
             throw new Exception('数据不合法');
+        }
+
+        $this->validate();
+        if ($oldInfo !== null) {
+            $oldInfo->validate();
         }
 
         $diff = new TableDiff();

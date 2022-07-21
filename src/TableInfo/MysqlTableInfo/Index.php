@@ -30,41 +30,72 @@ class Index
     protected array $fields;
     protected ?string $comment;
 
-    public function __construct(array $cfg)
+    public function __construct(?array $cfg = null)
     {
-        if (!isset($cfg['name']) || empty($cfg['name'])) {
+        if ($cfg === null) {
+            return;
+        }
+
+        $required = ['name', 'fields'];
+        foreach ($required as $name) {
+            if (!isset($cfg[$name])) {
+                throw new Exception('数据不合法');
+            }
+            $this->set($name, $cfg[$name]);
+        }
+
+        $optional = ['unique', 'fulltext', 'comment'];
+        foreach ($optional as $name) {
+            if (!isset($cfg[$name])) {
+                $this->set($name, null);
+            } else {
+                $this->set($name, $cfg[$name]);
+            }
+        }
+    }
+
+    public function set(string $name, $value) : void
+    {
+        if ($name == 'name') {
+            if (!is_string($value) || $value === '') {
+                throw new Exception('数据不合法');
+            }
+            $this->name = $value;
+        } elseif ($name == 'unique' || $name == 'fulltext') {
+            if (is_bool($value)) {
+                $this->{$name} = $value;
+            } else {
+                $this->{$name} = false;
+            }
+        } elseif ($name == 'comment') {
+            if (is_string($value)) {
+                $this->comment = $value;
+            } else {
+                $this->comment = '';
+            }
+        } elseif ($name == 'fields') {
+            if (empty($value) || !is_array($value)) {
+                throw new Exception('数据不合法');
+            }
+
+            $fields = [];
+            foreach ($value as $value) {
+                $fields[] = strval($value);
+            }
+            $this->fields = $fields;
+        } else {
             throw new Exception('数据不合法');
         }
-        $this->name = strval($cfg['name']);
+    }
 
-        if (isset($cfg['unique'])) {
-            $this->unique = !!($cfg['unique']);
-        } else {
-            $this->unique = false;
+    public function validate() : void
+    {
+        $fields = ['name', 'unique', 'fulltext', 'fields', 'comment'];
+        foreach ($fields as $field) {
+            if (!isset($this->{$field})) {
+                throw new Exception('对象未初始化');
+            }
         }
-
-        if (isset($cfg['fulltext'])) {
-            $this->fulltext = !!($cfg['fulltext']);
-        } else {
-            $this->fulltext = false;
-        }
-
-        if (isset($cfg['comment'])) {
-            $this->comment = strval($cfg['comment']);
-        } else {
-            $this->comment = null;
-        }
-
-        if (empty($cfg['fields']) || !is_array($cfg['fields'])) {
-            throw new Exception('数据不合法');
-        }
-
-        $fields = [];
-        foreach ($cfg['fields'] as $value) {
-            $fields[] = strval($value);
-        }
-
-        $this->fields = $fields;
     }
 
     public function getName() : string
@@ -74,14 +105,22 @@ class Index
 
     public function toArray()
     {
+        $this->validate();
+
         $ret = [
             'name' => $this->name,
-            'unique' => $this->unique,
-            'fulltext' => $this->fulltext,
             'fields' => $this->fields,
         ];
 
-        if ($this->comment !== null) {
+        if ($this->unique) {
+            $ret['unique'] = $this->unique;
+        }
+
+        if ($this->fulltext) {
+            $ret['fulltext'] = $this->fulltext;
+        }
+
+        if ($this->comment !== '') {
             $ret['comment'] = $this->comment;
         }
 
@@ -113,7 +152,7 @@ class Index
             $sql .= '`' . $this->name . '` (`' . implode('`,`', $this->fields) . '`)';
         }
 
-        if ($this->comment !== null) {
+        if ($this->comment !== '') {
             $sql .= ' COMMENT \'' . str_replace('\'', '\'\'', $this->comment) . '\'';
         }
 

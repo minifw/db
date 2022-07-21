@@ -91,15 +91,19 @@ class Mysqli extends DB\Driver\Driver
         return $tables;
     }
 
-    public function showCreate(string $table) : string
+    public function showCreate(string $table) : ?string
     {
-        $sql = 'show create table `' . $table . '`';
-        $data = $this->queryOne($sql, self::FETCH_NUM);
-        if (empty($data)) {
-            throw new Exception('数据表不存在');
-        }
+        try {
+            $sql = 'show create table `' . $table . '`';
+            $data = $this->queryOne($sql, self::FETCH_NUM);
+            if (empty($data)) {
+                throw new Exception('数据表不存在');
+            }
 
-        return $data[1];
+            return $data[1];
+        } catch (Exception $ex) {
+            return null;
+        }
     }
 
     public function getColumns(string $table) : array
@@ -129,27 +133,28 @@ class Mysqli extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : array
+    public function getTableInfo(string $table) : ?Info
     {
         $create_sql = $this->showCreate($table);
+        if ($create_sql === null) {
+            return null;
+        }
 
         try {
             $status = $this->getTableStatus($table);
             $fields = $this->getColumns($table);
 
-            $parser = new DB\SqlParser\MysqlCreateTable();
-            $parser->init($create_sql, $status, $fields);
-            $info = $parser->parse();
+            $parser = new DB\SqlParser\MysqlCreateTable($create_sql, $status, $fields);
+
+            return $parser->parse($this);
         } catch (Exception $ex) {
             if ($ex->getCode() == 100) {
-                $parser = new DB\SqlParser\MysqlCreateView();
-                $parser->init($create_sql);
-                $info = $parser->parse();
+                $parser = new DB\SqlParser\MysqlCreateView($create_sql);
+
+                return $parser->parse($this);
             } else {
                 throw $ex;
             }
         }
-
-        return $info;
     }
 }

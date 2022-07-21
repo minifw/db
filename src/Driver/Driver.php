@@ -238,7 +238,7 @@ abstract class Driver
 
     abstract public function getTables() : array;
 
-    abstract public function showCreate(string $table) : string;
+    abstract public function showCreate(string $table) : ?string;
 
-    abstract public function getTableInfo(string $table) : array;
+    abstract public function getTableInfo(string $table) : ?Info;
 }

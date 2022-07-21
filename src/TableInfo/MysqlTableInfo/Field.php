@@ -27,16 +27,17 @@ class Field
 {
     protected string $name;
     protected string $type;
+    protected string $comment;
+    protected string $charset = '';
+    protected string $collate = '';
     protected bool $nullable;
     protected bool $autoIncrement;
-    protected ?string $charset;
-    protected ?string $collate;
-    protected ?string $comment;
 
     /**
      * 可能会未初始化.
+     * @var string|null|bool
      */
-    protected ?string $default;
+    protected $default = false;
 
     public static function isCharType(string $type) : bool
     {
@@ -47,60 +48,101 @@ class Field
         return false;
     }
 
-    public function __construct(array $cfg, string $tableCharset, string $tableCollate)
+    public function __construct(?array $cfg = null, ?string $tableCharset = null, ?string $tableCollate = null)
     {
-        $fields = [
+        if ($cfg === null) {
+            return;
+        }
+
+        if ($tableCharset === null || $tableCollate === null) {
+            throw new Exception('参数不合法');
+        }
+
+        $fields = ['name', 'type', 'comment', 'nullable', 'autoIncrement'];
+        foreach ($fields as $field) {
+            if (isset($cfg[$field])) {
+                $this->set($field, $cfg[$field]);
+            } else {
+                $this->set($field, null);
+            }
+        }
+
+        if (self::isCharType($this->type)) {
+            if (!isset($cfg['charset'])) {
+                $this->set('charset', $tableCharset);
+            } else {
+                $this->set('charset', $cfg['charset']);
+            }
+            if (!isset($cfg['collate'])) {
+                $this->set('collate', $tableCollate);
+            } else {
+                $this->set('collate', $cfg['collate']);
+            }
+        }
+
+        if (isset($cfg['default'])) {
+            $this->set('default', $cfg['default']);
+        }
+    }
+
+    public function set(string $name, $value) : void
+    {
+        $stringFields = [
             'name' => true,
             'type' => true,
             'comment' => false,
         ];
 
-        foreach ($fields as $name => $require) {
-            if (!isset($cfg[$name]) || !is_string($cfg[$name])) {
-                if ($require) {
-                    throw new Exception('列数据不合法[' . $name . ']');
-                } else {
-                    $this->comment = null;
-                }
+        if (isset($stringFields[$name])) {
+            if (is_string($value) && $value !== '') {
+                $this->{$name} = $value;
+            } elseif ($stringFields[$name]) {
+                throw new Exception('列数据不合法');
             } else {
-                $this->{$name} = (string) $cfg[$name];
+                $this->{$name} = '';
             }
-        }
-
-        if (self::isCharType($this->type)) {
-            if (isset($cfg['charset'])) {
-                $this->charset = (string) $cfg['charset'];
-            } else {
-                $this->charset = $tableCharset;
+        } elseif ($name == 'charset' || $name == 'collate') {
+            if (!isset($this->type) || !is_string($value) || $value === '') {
+                throw new Exception('初始化存在问题');
             }
 
-            if (isset($cfg['collate'])) {
-                $this->collate = (string) $cfg['collate'];
+            if (self::isCharType($this->type)) {
+                $this->{$name} = (string) $value;
             } else {
-                $this->collate = $tableCollate;
+                $this->{$name} = '';
+            }
+        } elseif ($name == 'nullable' || $name == 'autoIncrement') {
+            if (is_bool($value)) {
+                $this->{$name} = $value;
+            } else {
+                $this->{$name} = false;
+            }
+        } elseif ($name == 'default') {
+            if ($value === null || is_string($value)) {
+                $this->default = $value;
+            } else {
+                throw new Exception('列数据不合法');
             }
         } else {
-            $this->charset = null;
-            $this->collate = null;
+            throw new Exception('数据不合法');
         }
+    }
 
-        if (!isset($cfg['nullable'])) {
-            $this->nullable = false;
-        } else {
-            $this->nullable = !!($cfg['nullable']);
-        }
+    public function validate() : void
+    {
+        $require = [
+            'name' => true,
+            'type' => true,
+            'comment' => false,
+            'charset' => false,
+            'collate' => false,
+            'nullable' => true,
+            'autoIncrement' => true,
+        ];
 
-        if (isset($cfg['autoIncrement'])) {
-            $this->autoIncrement = !!($cfg['autoIncrement']);
-        } else {
-            $this->autoIncrement = false;
-        }
-
-        if (isset($cfg['default'])) {
-            if ($cfg['default'] === null || is_string($cfg['default'])) {
-                $this->default = $cfg['default'];
-            } else {
-                throw new Exception('列数据不合法[default]');
+        foreach ($require as $name => $notNull) {
+            if (!isset($this->{$name})) {
+                throw new Exception('对象未初始化');
             }
         }
     }
@@ -112,21 +154,21 @@ class Field
 
     public function toArray() : array
     {
-        $required = [
-            'name' => true,
-            'type' => true,
-            'nullable' => true,
-            'comment' => false,
-            'autoIncrement' => false,
-        ];
+        $this->validate();
 
-        $ret = [];
-        foreach ($required as $name => $require) {
-            if (isset($this->{$name})) {
-                $ret[$name] = $this->{$name};
-            } elseif ($require) {
-                $ret[$name] = '';
-            }
+        $ret = [
+            'name' => $this->name,
+            'type' => $this->type
+        ];
+        if ($this->nullable) {
+            $ret['nullable'] = $this->nullable;
+        }
+        if ($this->autoIncrement) {
+            $ret['autoIncrement'] = $this->autoIncrement;
+        }
+
+        if (!$this->comment !== null && $this->comment !== '') {
+            $ret['comment'] = $this->comment;
         }
 
         if (self::isCharType($this->type)) {
@@ -134,7 +176,7 @@ class Field
             $ret['collate'] = $this->collate;
         }
 
-        if (isset($this->default)) {
+        if ($this->default !== false) {
             $ret['default'] = $this->default;
         }
 
@@ -143,6 +185,8 @@ class Field
 
     public function toSql(bool $trimAutoIncreament = false) : string
     {
+        $this->validate();
+
         $sql = '';
         if ($this->type == 'text') {
             $sql = '`' . $this->name . '` text CHARACTER SET ' . $this->charset . ' COLLATE ' . $this->collate;
@@ -164,7 +208,7 @@ class Field
                 $sql .= ' auto_increment';
             }
 
-            if (isset($this->default)) {
+            if ($this->default !== false) {
                 if ($this->default === null) {
                     $sql .= ' DEFAULT NULL';
                 } else {
@@ -173,7 +217,7 @@ class Field
             }
         }
 
-        if (isset($this->comment) && $this->comment !== null) {
+        if ($this->comment !== null && $this->comment !== '') {
             $sql .= ' COMMENT \'' . str_replace('\'', '\'\'', $this->comment) . '\'';
         }
 

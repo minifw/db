@@ -22,6 +22,7 @@ namespace Minifw\DB\SqlParser;
 use Minifw\Common\Exception;
 use Minifw\DB;
 use Minifw\DB\TableInfo\Info;
+use Minifw\DB\Driver\Driver;
 
 abstract class Parser
 {
@@ -55,19 +56,10 @@ abstract class Parser
         self::TYPE_OPERATOR => 'opt'
     ];
 
-    public function __construct(string $sql = '')
-    {
-        if (!empty($sql)) {
-            $this->init($sql);
-        }
-    }
-
-    public function init(string $sql, ?array $status = null, array $fields = []) : void
+    public function __construct(string $sql)
     {
         $this->sql = $sql;
         $this->len = strlen($sql);
-        $this->tokenCache = [];
-        $this->index = 0;
     }
 
     public function pushToken(array $token) : void
@@ -193,10 +185,12 @@ abstract class Parser
         return $sql;
     }
 
-    public function parse() : array
+    public function parse(Driver $driver) : Info
     {
+        $this->tokenCache = [];
+        $this->index = 0;
         try {
-            return $this->_parse();
+            return $this->_parse($driver);
         } catch (Exception $ex) {
             if ($ex->getCode() == 100) {
                 throw $ex;
@@ -205,5 +199,5 @@ abstract class Parser
         }
     }
 
-    abstract protected function _parse() : array;
+    abstract protected function _parse(Driver $driver) : Info;
 }

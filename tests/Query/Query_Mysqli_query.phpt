@@ -22,6 +22,8 @@ $diff->apply($driver);
 
 $diff = TableUtils::dbCmp($driver, $info);
 
+echo $diff->display();
+
 var_dump($diff->isEmpty());
 
 echo "\n";

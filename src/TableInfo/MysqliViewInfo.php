@@ -29,20 +29,40 @@ class MysqliViewInfo extends Info
     protected string $security;
     protected string $sql;
 
-    protected function __construct(Driver $driver, array $info)
+    public function __construct(Driver $driver, ?array $info = null)
     {
         parent::__construct($driver, $info);
 
-        $fields = ['algorithm', 'security', 'sql'];
-
-        foreach ($fields as $fname) {
-            if (empty($info[$fname]) || !is_string($info[$fname])) {
-                throw new Exception('数据不合法');
-            }
+        if ($info === null) {
+            return;
         }
 
-        foreach ($fields as $fname) {
-            $this->{$fname} = $info[$fname];
+        if (!isset($info['algorithm'])) {
+            throw new Exception('数据不合法');
+        }
+
+        if (!isset($info['security'])) {
+            throw new Exception('数据不合法');
+        }
+
+        if (!isset($info['sql'])) {
+            throw new Exception('数据不合法');
+        }
+
+        $this->set('algorithm', $info['algorithm']);
+        $this->set('security', $info['security']);
+        $this->set('sql', $info['sql']);
+    }
+
+    public function set(string $name, $value) : void
+    {
+        if ($name === 'algorithm' || $name === 'security' || $name === 'sql') {
+            if (empty($value) || !is_string($value)) {
+                throw new Exception('数据不合法');
+            }
+            $this->{$name} = (string) $value;
+        } else {
+            parent::set($name, $value);
         }
     }
 
@@ -50,8 +70,9 @@ class MysqliViewInfo extends Info
     {
         $ret = parent::toArray();
 
-        $fields = ['algorithm', 'security', 'sql'];
+        $this->validate();
 
+        $fields = ['algorithm', 'security', 'sql'];
         foreach ($fields as $fname) {
             $ret[$fname] = $this->{$fname};
         }
@@ -61,25 +82,30 @@ class MysqliViewInfo extends Info
 
     public function toSql() : string
     {
-        $sql = 'CREATE';
-
-        if (!empty($this->algorithm)) {
-            $sql .= ' ALGORITHM=' . $this->algorithm;
-        }
-
+        $this->validate();
         $user = $this->driver->getUser();
-
-        if (!empty($user)) {
-            $sql .= ' DEFINER=' . $user;
+        if (empty($user) || !is_string($user)) {
+            throw new Exception('对象未初始化');
         }
 
-        if (!empty($this->security)) {
-            $sql .= ' SQL SECURITY ' . $this->security;
-        }
-
-        $sql .= ' VIEW `' . $this->tbname . '` AS ' . $this->sql;
+        $sql = 'CREATE ALGORITHM=' . $this->algorithm .
+        ' DEFINER=' . $user .
+        ' SQL SECURITY ' . $this->security .
+        ' VIEW `' . $this->tbname . '` AS ' . $this->sql;
 
         return $sql;
+    }
+
+    public function validate() : void
+    {
+        parent::validate();
+
+        $fields = ['algorithm', 'security', 'sql'];
+        foreach ($fields as $fname) {
+            if (!isset($this->{$fname})) {
+                throw new Exception('对象未初始化');
+            }
+        }
     }
 
     /////////////////////////////
@@ -88,6 +114,11 @@ class MysqliViewInfo extends Info
     {
         if ($oldInfo !== null && !($oldInfo instanceof self)) {
             throw new Exception('数据不合法');
+        }
+
+        $this->validate();
+        if ($oldInfo !== null) {
+            $oldInfo->validate();
         }
 
         $diff = new TableDiff();

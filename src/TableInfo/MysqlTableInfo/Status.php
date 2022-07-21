@@ -28,7 +28,7 @@ class Status
     protected string $engine;
     protected string $charset;
     protected string $collate;
-    protected ?string $comment;
+    protected string $comment;
     protected ?string $checksum;
     protected ?string $rowFormat;
 
@@ -41,9 +41,47 @@ class Status
         return null;
     }
 
-    public function __construct(array $cfg)
+    public function __construct(?array $cfg = null)
     {
-        $fields = [
+        if ($cfg === null) {
+            return;
+        }
+
+        $fields = ['engine', 'charset', 'collate', 'comment', 'checksum', 'rowFormat'];
+        foreach ($fields as $name) {
+            if (isset($cfg[$name])) {
+                $this->set($name, $cfg[$name]);
+            } else {
+                $this->set($name, '');
+            }
+        }
+    }
+
+    public function set(string $name, $value) : void
+    {
+        $required = [
+            'engine' => true,
+            'charset' => true,
+            'collate' => true,
+            'checksum' => false,
+            'comment' => false,
+            'rowFormat' => false,
+        ];
+
+        if (!is_string($value) || $value === '') {
+            if ($required[$name]) {
+                throw new Exception('数据不合法');
+            } else {
+                $this->{$name} = '';
+            }
+        } else {
+            $this->{$name} = $value;
+        }
+    }
+
+    public function validate() : void
+    {
+        $required = [
             'engine' => true,
             'charset' => true,
             'collate' => true,
@@ -52,36 +90,28 @@ class Status
             'rowFormat' => false,
         ];
 
-        foreach ($fields as $name => $require) {
-            if (!isset($cfg[$name]) || !is_string($cfg[$name])) {
-                if ($require) {
-                    throw new Exception('数据不合法');
-                } else {
-                    $this->{$name} = null;
-                }
-            } else {
-                $this->{$name} = (string) $cfg[$name];
+        foreach ($required as $name => $require) {
+            if (!isset($this->{$name})) {
+                throw new Exception('对象未初始化');
             }
         }
     }
 
     public function toSql() : string
     {
-        $sql = 'ENGINE=' . $this->engine . ' DEFAULT CHARSET=' . $this->charset;
+        $this->validate();
 
-        if ($this->collate != '') {
-            $sql .= ' COLLATE=' . $this->collate;
-        }
+        $sql = 'ENGINE=' . $this->engine . ' DEFAULT CHARSET=' . $this->charset . ' COLLATE=' . $this->collate;
 
-        if ($this->checksum != '') {
+        if (!empty($this->checksum)) {
             $sql .= ' CHECKSUM=' . $this->checksum;
         }
 
-        if ($this->rowFormat != '') {
+        if (!empty($this->rowFormat)) {
             $sql .= ' ROW_FORMAT=' . $this->rowFormat;
         }
 
-        if ($this->comment != '') {
+        if (!empty($this->comment)) {
             $sql .= ' COMMENT=\'' . $this->comment . '\'';
         }
 
@@ -90,6 +120,8 @@ class Status
 
     public function toArray() : array
     {
+        $this->validate();
+
         $fields = [
             'engine' => true,
             'charset' => true,
@@ -101,10 +133,8 @@ class Status
 
         $ret = [];
         foreach ($fields as $name => $require) {
-            if (isset($this->{$name})) {
+            if (!empty($this->{$name})) {
                 $ret[$name] = $this->{$name};
-            } elseif ($require) {
-                $ret[$name] = '';
             }
         }
 
@@ -113,6 +143,9 @@ class Status
 
     public function cmp(string $tbname, self $old, TableDiff $diff) : void
     {
+        $this->validate();
+        $old->validate();
+
         if ($old->engine != $this->engine) {
             $diff->addDisplay('- ENGINE=' . $old->engine . "\n" . '+ ENGINE=' . $this->engine);
             $diff->addTrans('ALTER TABLE `' . $tbname . '` ENGINE=' . $this->engine);
@@ -127,25 +160,25 @@ class Status
         }
 
         if ($old->comment != $this->comment) {
-            if ($old->comment !== null) {
+            if ($old->comment !== '') {
                 $diff->addDisplay('- COMMENT=\'' . strval($old->comment) . '\'');
             }
-            if ($this->comment !== null) {
+            if ($this->comment !== '') {
                 $diff->addDisplay('+ COMMENT=\'' . strval($this->comment) . '\'');
             }
             $diff->addTrans('ALTER TABLE `' . $tbname . '` COMMENT=\'' . str_replace('\'', '\'\'', strval($this->comment)) . '\'');
         }
 
-        if ($this->checksum !== null && $old->checksum != $this->checksum) {
-            if ($old->checksum !== null) {
+        if ($this->checksum !== '' && $old->checksum != $this->checksum) {
+            if ($old->checksum !== '') {
                 $diff->addDisplay('- CHECKSUM=' . $old->checksum);
             }
             $diff->addDisplay('+ CHECKSUM=' . $this->checksum);
             $diff->addTrans('ALTER TABLE `' . $tbname . '` CHECKSUM=' . $this->checksum);
         }
 
-        if ($this->rowFormat !== null && $old->rowFormat != $this->rowFormat) {
-            if ($old->rowFormat !== null) {
+        if ($this->rowFormat !== '' && $old->rowFormat != $this->rowFormat) {
+            if ($old->rowFormat !== '') {
                 $diff->addDisplay('- ROW_FORMAT=' . $old->rowFormat);
             }
             $diff->addDisplay('+ ROW_FORMAT=' . $this->rowFormat);

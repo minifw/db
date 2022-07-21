@@ -91,11 +91,9 @@ abstract class Info
         return self::loadFromArray($driver, $info);
     }
 
-    public static function loadFromDb(Driver $driver, string $tbname) : self
+    public static function loadFromDb(Driver $driver, string $tbname) : ?self
     {
-        $info = $driver->getTableInfo($tbname);
-
-        return self::loadFromArray($driver, $info);
+        return $driver->getTableInfo($tbname);
     }
 
     public static function loadFromObject(Table $object) : self
@@ -172,26 +170,54 @@ abstract class Info
 
     protected function toArray() : array
     {
+        $this->validate();
+
         return [
             'type' => $this->type,
             'tbname' => $this->tbname,
         ];
     }
 
-    protected function __construct(Driver $driver, array $info)
+    public function set(string $name, $value) : void
     {
-        if (empty($info['tbname']) || !is_string($info['tbname'])) {
-            throw new Exception('数据不合法');
-        }
+        if ($name === 'type') {
+            if (empty($value) || !is_string($value) || $value !== 'table' && $value !== 'view') {
+                throw new Exception('数据不合法');
+            }
 
-        if (empty($info['type']) || !is_string($info['type']) || $info['type'] !== 'table' && $info['type'] !== 'view') {
-            throw new Exception('数据不合法');
+            $this->type = $value;
+        } elseif ($name === 'tbname') {
+            if (empty($value) || !is_string($value)) {
+                throw new Exception('数据不合法');
+            }
+            $this->tbname = $value;
+        } else {
+            throw new Exception('非法操作');
         }
+    }
 
-        $this->tbname = $info['tbname'];
-        $this->type = $info['type'];
+    public function __construct(Driver $driver, ?array $info = null)
+    {
+        if ($info !== null) {
+            if (!isset($info['tbname'])) {
+                throw new Exception('数据不合法');
+            }
+            $this->set('tbname', $info['tbname']);
+
+            if (!isset($info['type'])) {
+                throw new Exception('数据不合法');
+            }
+            $this->set('type', $info['type']);
+        }
 
         $this->driver = $driver;
+    }
+
+    public function validate() : void
+    {
+        if (!isset($this->tbname) || !isset($this->type)) {
+            throw new Exception('对象未初始化');
+        }
     }
     /////////////////////////////
 

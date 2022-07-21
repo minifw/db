@@ -100,7 +100,7 @@ class Sqlite3 extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : array
+    public function getTableInfo(string $table) : Info
     {
         $create_sql = $this->showCreate($table);
 

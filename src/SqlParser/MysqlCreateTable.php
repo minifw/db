@@ -22,6 +22,8 @@ namespace Minifw\DB\SqlParser;
 use Minifw\Common\Exception;
 use Minifw\DB;
 use Minifw\DB\TableInfo\Info;
+use Minifw\DB\TableInfo\MysqliTableInfo;
+use Minifw\DB\Driver\Driver;
 
 class MysqlCreateTable extends Parser
 {
@@ -38,20 +40,21 @@ class MysqlCreateTable extends Parser
         'tinyint' => 4,
     ];
 
-    public function init(string $sql, ?array $status = null, array $fields = []) : void
+    public function __construct(string $sql, ?array $status = null, array $fields = [])
     {
-        parent::init($sql, $status, $fields);
-        $this->tbname = '';
-        $this->fields = [];
-        $this->indexs = [];
-        $this->status = [];
+        parent::__construct($sql);
 
         $this->table_fields = $fields;
         $this->table_status = $status;
     }
 
-    protected function _parse() : array
+    protected function _parse(Driver $driver) : MysqliTableInfo
     {
+        $this->tbname = '';
+        $this->fields = [];
+        $this->indexs = [];
+        $this->status = [];
+
         $this->_parseTableName();
         $this->_parseTableContent();
         $this->_parseTableStatus();
@@ -65,7 +68,7 @@ class MysqlCreateTable extends Parser
             'index' => $this->indexs,
         ];
 
-        return $info;
+        return Info::loadFromArray($driver, $info);
     }
 
     ///////////////////////////////////////////
