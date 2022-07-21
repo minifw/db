@@ -50,7 +50,7 @@ class MysqlCreateTable extends Parser
         $this->table_status = $status;
     }
 
-    protected function _parse() : Info
+    protected function _parse() : array
     {
         $this->_parseTableName();
         $this->_parseTableContent();
@@ -59,14 +59,13 @@ class MysqlCreateTable extends Parser
 
         $info = [
             'type' => 'table',
-            'driver' => 'mysqli',
             'tbname' => $this->tbname,
             'status' => $this->status,
             'field' => $this->fields,
             'index' => $this->indexs,
         ];
 
-        return Info::load($info, Info::FORMAT_ARRAY, false);
+        return $info;
     }
 
     ///////////////////////////////////////////
@@ -111,7 +110,7 @@ class MysqlCreateTable extends Parser
             if ($info === null) {
                 break;
             }
-            $this->fields[$info[0]] = $info[1];
+            $this->fields[$info['name']] = $info;
         }
 
         while (true) {
@@ -119,7 +118,7 @@ class MysqlCreateTable extends Parser
             if ($info === null) {
                 break;
             }
-            $this->indexs[$info[0]] = $info[1];
+            $this->indexs[$info['name']] = $info;
         }
     }
 
@@ -203,6 +202,7 @@ class MysqlCreateTable extends Parser
                 if ($token[0] !== self::TYPE_KEYWORD) {
                     throw new Exception('');
                 }
+                $this->status['rowFormat'] = $token[1];
             } elseif ($token[1] === 'CHECKSUM') {
                 $token = $this->nextToken();
                 if ($token[0] !== self::TYPE_OPERATOR || $token[1] !== '=') {
@@ -221,24 +221,23 @@ class MysqlCreateTable extends Parser
 
     protected function _mergeDefined()
     {
-        if (!empty($this->table_status['Collation'])) {
-            $this->status['collate'] = $this->table_status['Collation'];
+        $hash = [
+            'collate' => 'Collation',
+            'rowFormat' => 'Row_format',
+            'engine' => 'Engine',
+            'checksum' => 'Checksum'
+        ];
+
+        foreach ($hash as $name => $key) {
+            if (!empty($this->table_status[$key])) {
+                $this->status[$name] = $this->table_status[$key];
+            }
         }
 
         foreach ($this->table_fields as $field) {
             if (!empty($field['Collation'])) {
                 $this->fields[$field['Field']]['collate'] = $field['Collation'];
             }
-        }
-
-        foreach ($this->fields as $name => $cfg) {
-            if (isset($cfg['charset']) && $cfg['charset'] == $this->status['charset']) {
-                unset($cfg['charset']);
-            }
-            if (isset($cfg['collate']) && $cfg['collate'] == $this->status['collate']) {
-                unset($cfg['collate']);
-            }
-            $this->fields[$name] = $cfg;
         }
     }
 
@@ -253,7 +252,6 @@ class MysqlCreateTable extends Parser
             return null;
         }
 
-        $index_name = null;
         $index_type = null;
         $info = [];
 
@@ -278,9 +276,9 @@ class MysqlCreateTable extends Parser
             if ($token[0] !== self::TYPE_FIELD || $token[1] === '') {
                 throw new Exception('');
             }
-            $index_name = $token[1];
+            $info['name'] = $token[1];
         } else {
-            $index_name = 'PRIMARY';
+            $info['name'] = 'PRIMARY';
         }
 
         $token = $this->nextToken();
@@ -355,7 +353,7 @@ class MysqlCreateTable extends Parser
             $this->pushToken($token);
         }
 
-        return [$index_name, $info];
+        return $info;
     }
 
     protected function nextField()
@@ -370,9 +368,9 @@ class MysqlCreateTable extends Parser
             return null;
         }
 
-        $field_name = $token[1];
+        $field['name'] = $token[1];
         $field['type'] = $this->nextFieldType();
-        $field['null'] = true;
+        $field['nullable'] = true;
 
         while (true) {
             $token = $this->nextToken();
@@ -384,12 +382,12 @@ class MysqlCreateTable extends Parser
                 if ($token[1] === 'NOT') {
                     $token = $this->nextToken();
                     if ($token[0] === self::TYPE_KEYWORD && $token[1] === 'NULL') {
-                        unset($field['null']);
+                        $field['nullable'] = false;
                     } else {
                         throw new Exception('');
                     }
                 } elseif ($token[1] === 'AUTO_INCREMENT') {
-                    $field['extra'] = 'auto_increment';
+                    $field['autoIncrement'] = true;
                 } elseif ($token[1] === 'COMMENT') {
                     $token = $this->nextToken();
                     if ($token[0] === self::TYPE_STRING) {
@@ -439,7 +437,7 @@ class MysqlCreateTable extends Parser
             }
         }
 
-        return [$field_name, $field];
+        return $field;
     }
 
     protected function nextFieldType()

@@ -1,6 +1,5 @@
 {
     "type": "view",
-    "driver": "mysqli",
     "tbname": "test_view",
     "algorithm": "UNDEFINED",
     "security": "DEFINER",

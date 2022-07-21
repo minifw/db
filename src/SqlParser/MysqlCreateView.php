@@ -23,20 +23,19 @@ class MysqlCreateView extends Parser
         $this->viewSql = '';
     }
 
-    protected function _parse() : Info
+    protected function _parse() : array
     {
         $this->_parseSql();
 
         $info = [
             'type' => 'view',
-            'driver' => 'mysqli',
             'tbname' => $this->tbname,
             'algorithm' => $this->algorithm,
             'security' => $this->sqlSecurity,
             'sql' => $this->viewSql,
         ];
 
-        return Info::load($info, Info::FORMAT_ARRAY, false);
+        return $info;
     }
 
     protected function _parseSql()

@@ -1,58 +1,68 @@
 {
     "type": "table",
-    "driver": "mysqli",
     "tbname": "table_with_all",
     "status": {
         "engine": "InnoDB",
         "charset": "utf8mb4",
         "collate": "utf8mb4_general_ci",
-        "comment": "Table To Create"
+        "comment": "Table To Create",
+        "rowFormat": "Dynamic"
     },
-    "field": {
-        "id": {
+    "field": [
+        {
+            "name": "id",
             "type": "int(10) unsigned",
-            "extra": "auto_increment",
+            "autoIncrement": true,
             "comment": "ID"
         },
-        "intfield": {
+        {
+            "name": "intfield",
             "type": "int(11)",
             "comment": "A int field"
         },
-        "charfield": {
+        {
+            "name": "charfield",
             "type": "varchar(200)",
             "charset": "utf8mb3",
             "collate": "utf8_general_ci",
             "comment": "A varchar field"
         },
-        "textfield": {
+        {
+            "name": "textfield",
             "type": "text",
             "comment": "A new text field"
         },
-        "intfield_def": {
+        {
+            "name": "intfield_def",
             "type": "int(11)",
             "default": "0",
             "comment": "A int field"
         },
-        "charfield_def": {
+        {
+            "name": "charfield_def",
             "type": "varchar(200)",
             "default": "",
             "comment": "A varchar field"
         }
-    },
-    "index": {
-        "PRIMARY": {
+    ],
+    "index": [
+        {
+            "name": "PRIMARY",
             "fields": ["id"],
             "comment": "主键"
         },
-        "uniqueindex": {
+        {
+            "name": "uniqueindex",
             "unique": true,
             "fields": ["intfield"]
         },
-        "charfield": {
+        {
+            "name": "charfield",
             "fields": ["charfield"]
         },
-        "intfield": {
+        {
+            "name": "intfield",
             "fields": ["intfield", "charfield"]
         }
-    }
+    ]
 }

@@ -46,26 +46,30 @@ class TableUtils
         }
 
         foreach ($tables as $table) {
-            $info = $drvier->getTableInfo($table);
+            $info = Info::loadFromDb($drvier, $table);
             $info->save($format, $dir, $table);
         }
     }
 
+    /**
+     * @param array<TableDiff> $diff
+     */
     public static function printAllDiff(array $diff) : string
     {
         $lines = [];
         $trans = [];
-        foreach ($diff as $class => $info) {
+        foreach ($diff as $info) {
             $lines[] = '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++';
-            $lines[] = $class . ' ' . $info['tbname'] . "\n";
+            $lines[] = $info->tbname . "\n";
 
-            if (!empty($info['diff'])) {
-                if (!empty($info['diff']['display'])) {
-                    $lines[] = implode("\n", $info['diff']['display']);
-                }
-                if (!empty($info['diff']['trans'])) {
-                    $trans[] = implode("\n", $info['diff']['trans']);
-                }
+            $display = $info->getDisplay();
+            if (!empty($display)) {
+                $lines[] = implode("\n", $display);
+            }
+
+            $trans = $info->getSql();
+            if (!empty($trans)) {
+                $trans[] = implode(";\n", $trans) . ';';
             }
         }
         $lines[] = "\n\n================================================================\n";
@@ -75,32 +79,15 @@ class TableUtils
         return implode("\n", $lines);
     }
 
-    public static function dbCmp(Driver $drvier, Info $info) : array
+    public static function dbCmp(Driver $driver, Info $newCfg) : TableDiff
     {
         try {
-            $old_info = $drvier->getTableInfo($info->tbname);
+            $oldCfg = Info::loadFromDb($driver, $newCfg->tbname);
         } catch (Exception $ex) {
-            $old_info = null;
+            $oldCfg = null;
         }
 
-        $comparer = $drvier->getComparer($info, $old_info);
-
-        return $comparer->getDiff();
-    }
-
-    public static function dbApply(Driver $driver, array $table_diff) : void
-    {
-        if (empty($table_diff)) {
-            return;
-        }
-
-        foreach ($table_diff['trans'] as $trans) {
-            if (!empty($trans)) {
-                $driver->exec($trans);
-            }
-        }
-
-        return;
+        return $newCfg->cmp($oldCfg);
     }
 
     public static function obj2dbApplyAll(Driver $driver, string $namespace = '', string $classPath = '') : void
@@ -123,11 +110,9 @@ class TableUtils
                 $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
                 require_once($classPath . '/' . $file);
 
-                $info = Info::load($classname, Info::FORMAT_OBJECT, true);
-                if (!$info !== null) {
-                    $table_diff = self::dbCmp($driver, $info);
-                    self::dbApply($driver, $table_diff);
-                }
+                $newCfg = Info::loadFromClass($classname);
+                $diff = self::dbCmp($driver, $newCfg);
+                $diff->apply($driver);
             }
         }
     }
@@ -144,9 +129,12 @@ class TableUtils
             if ($file == '.' || $file == '..') {
                 continue;
             }
-            $ndiff = [];
             if (is_dir($classPath . '/' . $file)) {
-                $ndiff = self::obj2dbCmpAll($driver, $namespace . '\\' . $file, $classPath . '/' . $file);
+                $diffList = self::obj2dbCmpAll($driver, $namespace . '\\' . $file, $classPath . '/' . $file);
+                if (empty($diffList)) {
+                    continue;
+                }
+                $diff = array_merge($diff, $diffList);
             } else {
                 if (substr($file, -4, 4) !== '.php') {
                     continue;
@@ -154,23 +142,12 @@ class TableUtils
                 $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
                 require_once($classPath . '/' . $file);
 
-                $info = Info::load($classname, Info::FORMAT_OBJECT, true);
-                if (!$info !== null) {
-                    $table_diff = self::dbCmp($driver, $info);
-
-                    if (empty($table_diff)) {
-                        continue;
-                    }
-                    $ndiff[$classname] = [
-                        'tbname' => $classname::$tbname,
-                        'diff' => $table_diff
-                    ];
+                $newCfg = Info::loadFromClass($classname);
+                $diffObj = self::dbCmp($driver, $newCfg);
+                if (!$diffObj->isEmpty()) {
+                    $diff[$newCfg->tbname] = $diffObj;
                 }
             }
-            if (empty($ndiff)) {
-                continue;
-            }
-            $diff = array_merge($diff, $ndiff);
         }
 
         ksort($diff);
@@ -192,9 +169,14 @@ class TableUtils
                 continue;
             }
 
-            $info = Info::load($dir . '/' . $file, $format, true);
-            $table_diff = self::dbCmp($driver, $info);
-            self::dbApply($driver, $table_diff);
+            $path = $dir . '/' . $file;
+            if (!is_file($path)) {
+                continue;
+            }
+
+            $newCfg = Info::loadFromFile($driver, $path, $format);
+            $diff = self::dbCmp($driver, $newCfg);
+            $diff->apply($driver);
         }
     }
 
@@ -212,17 +194,20 @@ class TableUtils
             if ($file === '.' || $file === '..') {
                 continue;
             }
-            $info = Info::load($dir . '/' . $file, $format, true);
-            $table_diff = self::dbCmp($driver, $info);
 
-            if (empty($table_diff)) {
+            $path = $dir . '/' . $file;
+            if (!is_file($path)) {
                 continue;
             }
 
-            $diff[$info->tbname] = [
-                'tbname' => $info->tbname,
-                'diff' => $table_diff
-            ];
+            $newCfg = Info::loadFromFile($driver, $path, $format);
+            $diffObj = self::dbCmp($driver, $newCfg);
+
+            if ($diffObj->isEmpty()) {
+                continue;
+            }
+
+            $diff[$newCfg->tbname] = $diffObj;
         }
 
         ksort($diff);

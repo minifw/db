@@ -72,6 +72,11 @@ class Mysqli extends DB\Driver\Driver
         return 'mysql:dbname=' . $dbname . ';host=' . $host . ';port=' . $port . ';charset=' . $charset;
     }
 
+    public function getName() : string
+    {
+        return 'mysqli';
+    }
+
     /////////////////////////////////////////
 
     public function getTables() : array
@@ -124,7 +129,7 @@ class Mysqli extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : Info
+    public function getTableInfo(string $table) : array
     {
         $create_sql = $this->showCreate($table);
 
@@ -146,26 +151,5 @@ class Mysqli extends DB\Driver\Driver
         }
 
         return $info;
-    }
-
-    public function getComparer(Info $new_cfg, ?Info $old_cfg) : DB\TableComparer\Comparer
-    {
-        if ($old_cfg !== null && !($new_cfg instanceof $old_cfg)) {
-            throw new Exception('不支持的操做');
-        }
-
-        if ($new_cfg->driverName !== 'mysqli' || ($old_cfg !== null && $old_cfg->driverName !== 'mysqli')) {
-            throw new Exception('不支持的操做');
-        }
-
-        if ($new_cfg instanceof MysqliTableInfo) {
-            return new DB\TableComparer\MysqlTableComparer($new_cfg, $old_cfg);
-        } elseif ($new_cfg instanceof MysqliViewInfo) {
-            $user = $this->getUser();
-
-            return new DB\TableComparer\MysqlViewComparer($new_cfg, $old_cfg, $user);
-        } else {
-            throw new Exception('不支持的操做');
-        }
     }
 }

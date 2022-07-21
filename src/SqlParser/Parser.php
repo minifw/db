@@ -193,7 +193,7 @@ abstract class Parser
         return $sql;
     }
 
-    public function parse() : Info
+    public function parse() : array
     {
         try {
             return $this->_parse();
@@ -205,5 +205,5 @@ abstract class Parser
         }
     }
 
-    abstract protected function _parse() : Info;
+    abstract protected function _parse() : array;
 }

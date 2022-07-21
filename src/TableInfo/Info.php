@@ -25,20 +25,17 @@ use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Driver\Sqlite3;
 use Minifw\Common\File;
 use Minifw\Common\FileUtils;
+use Minifw\DB\Driver\Driver;
+use Minifw\DB\TableDiff;
 
 abstract class Info
 {
     const FORMAT_ARRAY = 1;
     const FORMAT_SERIALIZE = 2;
     const FORMAT_JSON = 3;
-    const FORMAT_OBJECT = 4;
     protected string $tbname;
-    protected string $driverName;
+    protected Driver $driver;
     protected string $type;
-    public static array $driverList = [
-        'mysqli' => 'Mysqli',
-        'sqlite3' => 'Sqlite3',
-    ];
 
     public function __get(string $name)
     {
@@ -49,97 +46,89 @@ abstract class Info
         return null;
     }
 
-    public static function load($data, int $format, bool $isFile) : ?self
+    public static function loadFromArray(Driver $driver, array $data) : self
     {
-        if ($format < 1 || $format > 4) {
-            return null;
+        if ($data['type'] !== 'table' && $data['type'] !== 'view') {
+            throw new Exception('数据不合法');
         }
+        $infoClass = __NAMESPACE__ . '\\' . ucfirst($driver->getName()) . ucfirst($data['type']) . 'Info';
 
+        return new $infoClass($driver, $data);
+    }
+
+    public static function loadFromFile(Driver $driver, string $path, int $format) : self
+    {
         $info = null;
         switch ($format) {
             case self::FORMAT_ARRAY:
-                if ($isFile) {
-                    if (file_exists($data)) {
-                        $info = include($data);
-                    } else {
-                        return null;
-                    }
+                if (file_exists($path)) {
+                    $info = include($path);
                 } else {
-                    $info = $data;
+                    throw new Exception('文件不存在');
                 }
+
                 break;
             case self::FORMAT_JSON:
-                if ($isFile) {
-                    $data = file_get_contents($data);
+                if (file_exists($path)) {
+                    $path = file_get_contents($path);
+                    $info = json_decode($path, true);
+                } else {
+                    throw new Exception('文件不存在');
                 }
-                $info = json_decode($data, true);
                 break;
             case self::FORMAT_SERIALIZE:
-                if ($isFile) {
-                    $data = file_get_contents($data);
-                }
-                $info = unserialize($data);
-                break;
-            case self::FORMAT_OBJECT:
-                if ($isFile) {
-                    $classname = $data;
-                    if (!class_exists($classname) || !is_callable($classname . '::get')) {
-                        return null;
-                    }
-                    $obj = $classname::get();
-                    if (!($obj instanceof Table)) {
-                        return null;
-                    }
+                if (file_exists($path)) {
+                    $path = file_get_contents($path);
+                    $info = unserialize($path);
                 } else {
-                    $obj = $data;
+                    throw new Exception('文件不存在');
                 }
-
-                $info = [];
-                $info['type'] = 'table';
-
-                $driver = $obj->getDriver();
-                if ($driver instanceof Mysqli) {
-                    $info['driver'] = 'mysqli';
-                } elseif ($driver instanceof Sqlite3) {
-                    $info['driver'] = 'sqlite3';
-                } else {
-                    return null;
-                }
-
-                $info['status'] = isset($obj::$status) ? $obj::$status : [];
-                $info['field'] = isset($obj::$field) ? $obj::$field : [];
-                $info['index'] = isset($obj::$index) ? $obj::$index : [];
-                $info['tbname'] = isset($obj::$tbname) ? $obj::$tbname : '';
-                $info['initTableSql'] = $obj->initTableSql();
                 break;
             default:
-                return null;
+                throw new Exception('format不合法');
         }
 
-        if ($info['type'] !== 'table' && $info['type'] !== 'view') {
-            return null;
-        }
-
-        if (!array_key_exists($info['driver'], self::$driverList)) {
-            return null;
-        }
-
-        $infoClass = __NAMESPACE__ . '\\' . ucfirst($info['driver']) . ucfirst($info['type']) . 'Info';
-        $ret = new $infoClass();
-
-        if (!$ret->init($info)) {
-            return null;
-        }
-
-        return $ret;
+        return self::loadFromArray($driver, $info);
     }
 
-    public function save(int $format, string $dir, string $name) : bool
+    public static function loadFromDb(Driver $driver, string $tbname) : self
+    {
+        $info = $driver->getTableInfo($tbname);
+
+        return self::loadFromArray($driver, $info);
+    }
+
+    public static function loadFromObject(Table $object) : self
+    {
+        if (!($object instanceof Table)) {
+            throw new Exception('类不合法');
+        }
+
+        $info = [];
+        $info['type'] = 'table';
+        $info['status'] = isset($object::$status) ? $object::$status : [];
+        $info['field'] = isset($object::$field) ? $object::$field : [];
+        $info['index'] = isset($object::$index) ? $object::$index : [];
+        $info['tbname'] = isset($object::$tbname) ? $object::$tbname : '';
+        $info['initTableSql'] = $object->initTableSql();
+
+        return self::loadFromArray($object->getDriver(), $info);
+    }
+
+    public static function loadFromClass(string $classname) : self
+    {
+        if (!class_exists($classname) || !is_callable($classname . '::get')) {
+            throw new Exception('类不存在');
+        }
+
+        $obj = $classname::get();
+
+        return self::loadFromObject($obj);
+    }
+
+    public function save(int $format, string $dir, string $name) : void
     {
         $string = $this->toString($format);
-        if ($string === null) {
-            return false;
-        }
 
         $dir = rtrim($dir, '/\\');
 
@@ -156,15 +145,16 @@ abstract class Info
                 $full = $dir . '/' . $name . '.json';
                 break;
             default:
-                return false;
+                throw new Exception('数据不合法');
         }
 
-        file_put_contents($full, $string);
-
-        return true;
+        $ret = file_put_contents($full, $string);
+        if ($ret === false) {
+            throw new Exception('数据写入失败');
+        }
     }
 
-    public function toString(int $format) : ?string
+    public function toString(int $format) : string
     {
         $data = $this->toArray();
 
@@ -176,7 +166,7 @@ abstract class Info
             case self::FORMAT_SERIALIZE:
                 return serialize($data);
             default:
-                return null;
+                throw new Exception('数据不合法');
         }
     }
 
@@ -184,33 +174,26 @@ abstract class Info
     {
         return [
             'type' => $this->type,
-            'driver' => $this->driverName,
             'tbname' => $this->tbname,
         ];
     }
 
-    protected function init(array $info) : bool
+    protected function __construct(Driver $driver, array $info)
     {
         if (empty($info['tbname']) || !is_string($info['tbname'])) {
-            return false;
-        }
-
-        if (empty($info['driver']) || !is_string($info['driver'])) {
-            return false;
+            throw new Exception('数据不合法');
         }
 
         if (empty($info['type']) || !is_string($info['type']) || $info['type'] !== 'table' && $info['type'] !== 'view') {
-            return false;
+            throw new Exception('数据不合法');
         }
 
         $this->tbname = $info['tbname'];
-        $this->driverName = $info['driver'];
         $this->type = $info['type'];
 
-        return true;
+        $this->driver = $driver;
     }
+    /////////////////////////////
 
-    protected function __construct()
-    {
-    }
+    abstract public function cmp(?self $oldInfo) : TableDiff;
 }

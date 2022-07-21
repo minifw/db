@@ -81,10 +81,11 @@ function testExport($dirInfo, $driver)
 
     foreach ($tables as $table) {
         echo $table . "\n";
-        $new_content = file_get_contents($dir . '/' . $table . '.json');
-        $old_content = file_get_contents(__DIR__ . '/old/' . $dirInfo['name'] . '/' . $table . '.json');
+        $newInfo = Info::loadFromFile($driver, $dir . '/' . $table . '.json', Info::FORMAT_JSON);
+        $oldInfo = Info::loadFromFile($driver, __DIR__ . '/old/' . $dirInfo['name'] . '/' . $table . '.json', Info::FORMAT_JSON);
 
-        var_dump(jsoncmp($new_content, $old_content));
+        $diff = $newInfo->cmp($oldInfo);
+        var_dump($diff->isEmpty());
     }
 
     echo '== export test of ' . $dirInfo['name'] . " end ==\n";
@@ -151,11 +152,11 @@ array(0) {
 == create test of json end ==
 == export test of json begin ==
 table_with_all
-int(0)
+bool(true)
 table_with_one
-int(0)
+bool(true)
 test_view
-int(0)
+bool(true)
 == export test of json end ==
 == diff test of json begin ==
 int(3)

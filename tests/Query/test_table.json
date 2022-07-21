@@ -1,45 +1,52 @@
 {
     "type": "table",
-    "driver": "mysqli",
     "tbname": "test_table",
     "status": {
         "engine": "InnoDB",
         "charset": "utf8mb4",
         "collate": "utf8mb4_general_ci",
-        "comment": "测试表"
+        "comment": "测试表",
+        "rowFormat": "Dynamic"
     },
-    "field": {
-        "id": {
+    "field": [
+        {
+            "name": "id",
             "type": "int(10) unsigned",
-            "extra": "auto_increment",
+            "autoIncrement": true,
             "comment": "ID"
         },
-        "age": {
+        {
+            "name": "age",
             "type": "int(11)",
             "comment": "年龄"
         },
-        "name": {
+        {
+            "name": "name",
             "type": "varchar(200)",
             "comment": "姓名"
         },
-        "address": {
+        {
+            "name": "address",
             "type": "varchar(200)",
             "default": "",
             "comment": "地址"
         },
-        "code": {
+        {
+            "name": "code",
             "type": "varchar(200)",
             "default": "",
             "comment": "代码"
         }
-    },
-    "index": {
-        "PRIMARY": {
+    ],
+    "index": [
+        {
+            "name": "PRIMARY",
             "fields": ["id"],
             "comment": "主键"
         },
-        "age": {
+        {
+            "name": "age",
             "fields": ["age"]
         }
-    }
+    ]
 }

@@ -70,6 +70,11 @@ class Sqlite3 extends DB\Driver\Driver
         return 'sqlite:' . $file;
     }
 
+    public function getName() : string
+    {
+        return 'sqlite3';
+    }
+
     //////////////////////////////////////////////////
 
     public function getTables() : array
@@ -95,7 +100,7 @@ class Sqlite3 extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : Info
+    public function getTableInfo(string $table) : array
     {
         $create_sql = $this->showCreate($table);
 
@@ -104,10 +109,5 @@ class Sqlite3 extends DB\Driver\Driver
         $info = $parser->parse();
 
         return $info;
-    }
-
-    public function getComparer() : DB\TableComparer\SqliteComparer
-    {
-        return new DB\TableComparer\SqliteComparer();
     }
 }

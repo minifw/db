@@ -206,6 +206,8 @@ abstract class Driver
 
     abstract protected function getDsn() : string;
 
+    abstract public function getName() : string;
+
     /**
      * @param mixed $field
      * @return mixed
@@ -236,9 +238,7 @@ abstract class Driver
 
     abstract public function getTables() : array;
 
-    abstract public function getComparer(Info $new_cfg, ?Info $old_cfg) : \Minifw\DB\TableComparer\Comparer;
-
     abstract public function showCreate(string $table) : string;
 
-    abstract public function getTableInfo(string $table) : Info;
+    abstract public function getTableInfo(string $table) : array;
 }

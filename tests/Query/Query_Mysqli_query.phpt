@@ -16,11 +16,13 @@ Query::setDefaultDriver($driver);
 
 Query::get()->query('drop table if exists `test_table`');
 
-$info = Info::load(__DIR__ . '/test_table.json', Info::FORMAT_JSON, true);
-$table_diff = TableUtils::dbCmp($driver, $info);
-TableUtils::dbApply($driver, $table_diff);
+$info = Info::loadFromFile($driver, __DIR__ . '/test_table.json', Info::FORMAT_JSON);
+$diff = TableUtils::dbCmp($driver, $info);
+$diff->apply($driver);
 
-var_dump(TableUtils::dbCmp($driver, $info));
+$diff = TableUtils::dbCmp($driver, $info);
+
+var_dump($diff->isEmpty());
 
 echo "\n";
 
@@ -110,8 +112,7 @@ echo json_encode($result, JSON_UNESCAPED_UNICODE) . "\n\n";
 
 ?>
 --EXPECT--
-array(0) {
-}
+bool(true)
 
 select * from `test_table`;
 1:26:张三::123
