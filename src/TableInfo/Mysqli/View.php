@@ -17,15 +17,14 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo;
+namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
-use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\TableDiff;
 use Minifw\DB\TableInfo;
 
-class MysqliViewInfo extends TableInfo
+class View extends TableInfo
 {
     protected string $algorithm;
     protected string $security;

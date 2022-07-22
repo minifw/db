@@ -17,17 +17,14 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo;
+namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
 use Minifw\DB\TableDiff;
 use Minifw\DB\TableInfo;
-use Minifw\DB\TableInfo\MysqlTableInfo\Field;
-use Minifw\DB\TableInfo\MysqlTableInfo\Index;
-use Minifw\DB\TableInfo\MysqlTableInfo\Status;
 
-class MysqliTableInfo extends TableInfo
+class Table extends TableInfo
 {
     protected Status $status;
 

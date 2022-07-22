@@ -17,7 +17,7 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Parser\MysqliParser;
+namespace Minifw\DB\Parser\Mysqli;
 
 use Minifw\Common\Exception;
 

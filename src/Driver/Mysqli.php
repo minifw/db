@@ -21,10 +21,10 @@ namespace Minifw\DB\Driver;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
-use Minifw\DB\Parser\MysqliParser\CreateTable;
-use Minifw\DB\Parser\MysqliParser\CreateView;
-use Minifw\DB\Parser\MysqliParser\Scanner;
-use Minifw\DB\Parser\MysqliParser\Token;
+use Minifw\DB\Parser\Mysqli\CreateTable;
+use Minifw\DB\Parser\Mysqli\CreateView;
+use Minifw\DB\Parser\Mysqli\Scanner;
+use Minifw\DB\Parser\Mysqli\Token;
 use Minifw\DB\TableInfo;
 
 class Mysqli extends Driver

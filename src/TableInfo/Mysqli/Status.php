@@ -17,7 +17,7 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo\MysqlTableInfo;
+namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\TableDiff;
@@ -69,7 +69,7 @@ class Status
 
         if (!is_string($value) || $value === '') {
             if ($required[$name]) {
-                throw new Exception('数据不合法');
+                throw new Exception('数据不合法' . $name . '=>' . $value);
             } else {
                 $this->{$name} = '';
             }

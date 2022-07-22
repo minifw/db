@@ -1,24 +1,24 @@
 <?php
 
-namespace Minifw\DB\Parser\MysqliParser;
+namespace Minifw\DB\Parser\Mysqli;
 
 use Minifw\Common\Exception;
-use Minifw\DB\TableInfo\MysqliViewInfo;
+use Minifw\DB\TableInfo\Mysqli\View;
 
 class CreateView
 {
     protected Scanner $scaner;
-    protected MysqliViewInfo $obj;
+    protected View $obj;
 
     public function __construct(Scanner $scanner)
     {
         $this->scaner = $scanner;
     }
 
-    public function parse($driver) : MysqliViewInfo
+    public function parse($driver) : View
     {
         $this->scaner->reset();
-        $this->obj = new MysqliViewInfo($driver);
+        $this->obj = new View($driver);
 
         $this->_parseSql();
 

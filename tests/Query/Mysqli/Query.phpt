@@ -1,5 +1,5 @@
 --TEST--
-Query Mysqli sql build test
+Query Mysqli sql query test
 --CAPTURE_STDIO--
 STDOUT
 --FILE--

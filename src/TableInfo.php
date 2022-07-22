@@ -44,7 +44,7 @@ abstract class TableInfo
         if ($data['type'] !== 'table' && $data['type'] !== 'view') {
             throw new Exception('数据不合法');
         }
-        $infoClass = __NAMESPACE__ . '\\TableInfo\\' . ucfirst($driver->getName()) . ucfirst($data['type']) . 'Info';
+        $infoClass = __NAMESPACE__ . '\\TableInfo\\' . ucfirst($driver->getName()) . '\\' . ucfirst($data['type']);
 
         return new $infoClass($driver, $data);
     }

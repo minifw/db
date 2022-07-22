@@ -17,19 +17,19 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Parser\MysqliParser;
+namespace Minifw\DB\Parser\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
-use Minifw\DB\TableInfo\MysqliTableInfo;
-use Minifw\DB\TableInfo\MysqlTableInfo\Field;
-use Minifw\DB\TableInfo\MysqlTableInfo\Index;
-use Minifw\DB\TableInfo\MysqlTableInfo\Status;
+use Minifw\DB\TableInfo\Mysqli\Table;
+use Minifw\DB\TableInfo\Mysqli\Field;
+use Minifw\DB\TableInfo\Mysqli\Index;
+use Minifw\DB\TableInfo\Mysqli\Status;
 
 class CreateTable
 {
     protected Scanner $scaner;
-    protected MysqliTableInfo $obj;
+    protected Table $obj;
     protected string $tableCollate;
     protected string $tableCharset;
     protected array $tableStatus;
@@ -55,12 +55,12 @@ class CreateTable
         $this->tableColumns = $columns;
     }
 
-    public function parse(Driver $driver) : MysqliTableInfo
+    public function parse(Driver $driver) : Table
     {
         $this->fields = [];
         $this->scaner->reset();
 
-        $this->obj = new MysqliTableInfo($driver);
+        $this->obj = new Table($driver);
 
         try {
             $this->_parseTableName();

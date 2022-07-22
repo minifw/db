@@ -17,7 +17,7 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo\MysqlTableInfo;
+namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 
