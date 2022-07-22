@@ -4,7 +4,7 @@ Query Mysqli sql build test
 STDOUT
 --FILE--
 <?php
-require __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../../bootstrap.php';
 
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;

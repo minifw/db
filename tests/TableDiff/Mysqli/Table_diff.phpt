@@ -7,7 +7,7 @@ STDOUT
 
 namespace Minifw\DB\Test;
 
-require __DIR__ . '/../bootstrap.php';
+require __DIR__ . '/../../bootstrap.php';
 
 use Minifw\Common\File;
 use Minifw\DB\Driver\Mysqli;
@@ -22,8 +22,8 @@ Query::get()->query('drop table if exists `table_with_all`');
 Query::get()->query('drop table if exists `table_with_one`');
 Query::get()->query('drop view if exists `test_view`');
 
-if (file_exists(APP_ROOT . '/tmp/tests/db')) {
-    (new File(APP_ROOT . '/tmp/tests/db'))->clearDir();
+if (file_exists(APP_ROOT . '/tmp/tests/db/mysqli')) {
+    (new File(APP_ROOT . '/tmp/tests/db/mysqli'))->clearDir();
 }
 
 $dirList = [
@@ -78,7 +78,7 @@ function testExport($dirInfo, $driver)
 {
     echo '== export test of ' . $dirInfo['name'] . " begin ==\n";
 
-    $dir = APP_ROOT . '/tmp/tests/db/' . $dirInfo['name'];
+    $dir = APP_ROOT . '/tmp/tests/db/mysqli/' . $dirInfo['name'];
     TableUtils::exportAllDb($driver, $dir, $dirInfo['format']);
 
     $tables = ['table_with_all', 'table_with_one', 'test_view'];
