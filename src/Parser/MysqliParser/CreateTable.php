@@ -17,29 +17,28 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\MysqliParser;
+namespace Minifw\DB\Parser\MysqliParser;
 
 use Minifw\Common\Exception;
-use Minifw\DB\TableInfo\Info;
+use Minifw\DB\Driver;
 use Minifw\DB\TableInfo\MysqliTableInfo;
-use Minifw\DB\Driver\Driver;
-use Minifw\DB\TableInfo\MysqlTableInfo\Status;
 use Minifw\DB\TableInfo\MysqlTableInfo\Field;
 use Minifw\DB\TableInfo\MysqlTableInfo\Index;
+use Minifw\DB\TableInfo\MysqlTableInfo\Status;
 
-class MysqliCreateTable
+class CreateTable
 {
-    protected MysqliScanner $scaner;
+    protected Scanner $scaner;
     protected MysqliTableInfo $obj;
     protected string $tableCollate;
     protected string $tableCharset;
     protected array $tableStatus;
     protected array $tableColumns;
     const DEFAULT_LEN = [
-        'int' => 11,
-        'int_unsigned' => 10,
-        'bigint' => 20,
-        'tinyint' => 4,
+        'int' => '11',
+        'int_unsigned' => '10',
+        'bigint' => '20',
+        'tinyint' => '4',
     ];
 
     /**
@@ -47,7 +46,7 @@ class MysqliCreateTable
      */
     protected array $fields = [];
 
-    public function __construct(MysqliScanner $scanner, array $status, array $columns)
+    public function __construct(Scanner $scanner, array $status, array $columns)
     {
         $this->scaner = $scanner;
 
@@ -79,10 +78,10 @@ class MysqliCreateTable
 
     protected function _parseTableName()
     {
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'CREATE');
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'TABLE');
+        $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'CREATE');
+        $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'TABLE');
 
-        $tbname = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD);
+        $tbname = $this->scaner->nextTokenAs(Token::TYPE_FIELD);
         $this->obj->set('tbname', $tbname);
 
         while (true) {
@@ -91,9 +90,9 @@ class MysqliCreateTable
                 throw new Exception('');
             }
 
-            if ($token->type === MysqliToken::TYPE_KEYWORD) {
+            if ($token->type === Token::TYPE_KEYWORD) {
                 continue;
-            } elseif ($token->is(MysqliToken::TYPE_OPERATOR, '(')) {
+            } elseif ($token->is(Token::TYPE_OPERATOR, '(')) {
                 break;
             } else {
                 throw new Exception('');
@@ -122,7 +121,7 @@ class MysqliCreateTable
 
     protected function _parseTableStatus()
     {
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, ')');
+        $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, ')');
         $status = new Status();
 
         while (true) {
@@ -132,47 +131,47 @@ class MysqliCreateTable
             }
             switch ($token->value) {
                 case 'ENGINE':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $status->set('engine', strtolower($value));
                     break;
                 case 'DEFAULT':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'CHARSET');
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'CHARSET');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = strtolower($this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD));
+                    $value = strtolower($this->scaner->nextTokenAs(Token::TYPE_KEYWORD));
                     $status->set('charset', $value);
                     $this->tableCharset = $value;
                     break;
                 case 'COLLATE':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $status->set('collate', strtolower($value));
                     $this->tableCollate = $value;
                     break;
                 case 'COMMENT':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_STRING);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_STRING);
                     $status->set('comment', $value);
                     break;
                 case 'AUTO_INCREMENT':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     break;
                 case 'ROW_FORMAT':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $status->set('rowFormat', strtolower($value));
                     break;
                 case 'CHECKSUM':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $status->set('checksum', strtolower($value));
                     break;
                 default:
@@ -212,7 +211,7 @@ class MysqliCreateTable
 
     protected function nextIndex() : ?Index
     {
-        $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD, false);
+        $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD, false);
         if ($value === null) {
             return null;
         }
@@ -224,7 +223,7 @@ class MysqliCreateTable
         if (in_array($value, $two)) {
             $index_type = $value;
 
-            $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'KEY');
+            $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'KEY');
 
             if ($index_type === 'UNIQUE') {
                 $index->set('unique', true);
@@ -236,13 +235,13 @@ class MysqliCreateTable
         }
 
         if ($index_type !== 'PRIMARY') {
-            $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD);
+            $value = $this->scaner->nextTokenAs(Token::TYPE_FIELD);
             $index->set('name', $value);
         } else {
             $index->set('name', 'PRIMARY');
         }
 
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '(');
+        $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '(');
 
         $fields = [];
         while (true) {
@@ -251,7 +250,7 @@ class MysqliCreateTable
                 throw new Exception('');
             }
 
-            if ($token->type === MysqliToken::TYPE_OPERATOR) {
+            if ($token->type === Token::TYPE_OPERATOR) {
                 if ($token->value === ')') {
                     if (empty($fields)) {
                         throw new Exception('');
@@ -260,14 +259,14 @@ class MysqliCreateTable
                 } elseif ($token->value === ',') {
                     continue;
                 }
-            } elseif ($token->type === MysqliToken::TYPE_FIELD) {
+            } elseif ($token->type === Token::TYPE_FIELD) {
                 $field = $token->value;
 
                 $token = $this->scaner->nextToken();
-                if ($token !== null && $token->type === MysqliToken::TYPE_OPERATOR && $token->value === '(') {
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                if ($token !== null && $token->type === Token::TYPE_OPERATOR && $token->value === '(') {
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $field .= '(' . $value . ')';
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, ')');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, ')');
                 } else {
                     $this->scaner->pushToken($token);
                 }
@@ -281,22 +280,22 @@ class MysqliCreateTable
         $index->set('fields', $fields);
 
         while (true) {
-            $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD, false);
+            $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD, false);
             if ($value === null) {
                 break;
             }
 
             if ($value === 'COMMENT') {
-                $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_STRING);
+                $value = $this->scaner->nextTokenAs(Token::TYPE_STRING);
                 $index->set('comment', $value);
             } elseif ($value === 'USING') {
-                $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
             } else {
                 throw new Exception('');
             }
         }
 
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, ',', false);
+        $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, ',', false);
 
         return $index;
     }
@@ -305,14 +304,13 @@ class MysqliCreateTable
     {
         $field = new Field();
 
-        $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD, false);
+        $value = $this->scaner->nextTokenAs(Token::TYPE_FIELD, false);
         if ($value === null) {
             return null;
         }
 
         $field->set('name', $value);
-        $type = $this->nextFieldType();
-        $field->set('type', $type);
+        $this->nextFieldType($field);
 
         $nullable = true;
 
@@ -322,46 +320,46 @@ class MysqliCreateTable
                 throw new Exception('');
             }
 
-            if ($token->type == MysqliToken::TYPE_OPERATOR) {
+            if ($token->type == Token::TYPE_OPERATOR) {
                 if ($token->value === ')') {
                     $this->scaner->pushToken($token);
                 } elseif ($token->value !== ',') {
                     throw new Exception('');
                 }
                 break;
-            } elseif ($token->type !== MysqliToken::TYPE_KEYWORD) {
+            } elseif ($token->type !== Token::TYPE_KEYWORD) {
                 throw new Exception('');
             }
 
             switch ($token->value) {
                 case 'NOT':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'NULL');
+                    $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'NULL');
                     $nullable = false;
                     break;
                 case 'AUTO_INCREMENT':
                     $field->set('autoIncrement', true);
                     break;
                 case 'COMMENT':
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_STRING);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_STRING);
                     $field->set('comment', $value);
                     break;
                 case 'DEFAULT':
                     $token = $this->scaner->nextToken();
-                    if ($token->type === MysqliToken::TYPE_STRING) {
+                    if ($token->type === Token::TYPE_STRING) {
                         $field->set('default', $token->value);
-                    } elseif ($token->is(MysqliToken::TYPE_KEYWORD, 'NULL')) {
+                    } elseif ($token->is(Token::TYPE_KEYWORD, 'NULL')) {
                         $field->set('default', null);
                     } else {
                         throw new Exception('');
                     }
                     break;
                 case 'CHARACTER':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'SET');
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'SET');
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $field->set('charset', strtolower($value));
                     break;
                 case 'COLLATE':
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
                     $field->set('collate', strtolower($value));
                     break;
                 default:
@@ -374,59 +372,61 @@ class MysqliCreateTable
         return $field;
     }
 
-    protected function nextFieldType()
+    protected function nextFieldType(Field $field) : void
     {
-        $type = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+        $type = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
+
         $type = strtolower($type);
+        $field->set('type', $type);
 
         $token = $this->scaner->nextToken();
 
         if ($type == 'enum') {
-            if (!$token->is(MysqliToken::TYPE_OPERATOR, '(')) {
+            if (!$token->is(Token::TYPE_OPERATOR, '(')) {
                 throw new Exception('');
             }
-            $type .= '(';
+            $attr = '';
             while (true) {
                 $token = $this->scaner->nextToken();
                 if ($token === null) {
                     throw new Exception('');
                 }
-                if ($token->type === MysqliToken::TYPE_OPERATOR) {
+                if ($token->type === Token::TYPE_OPERATOR) {
                     if ($token->value === ')') {
-                        $type .= ')';
+                        $field->set('attr', $attr);
                         $token = $this->scaner->nextToken();
                         break;
                     } elseif ($token->value === ',') {
-                        $type .= ',';
+                        $attr .= ',';
                     }
-                } elseif ($token->type === MysqliToken::TYPE_KEYWORD) {
-                    $type .= $token->value;
-                } elseif ($token->type === MysqliToken::TYPE_STRING) {
-                    $type .= '\'' . $token->value . '\'';
+                } elseif ($token->type === Token::TYPE_KEYWORD) {
+                    $attr .= $token->value;
+                } elseif ($token->type === Token::TYPE_STRING) {
+                    $attr .= '\'' . $token->value . '\'';
                 } else {
                     throw new Exception('');
                 }
             }
         } else {
-            if ($token->is(MysqliToken::TYPE_OPERATOR, '(')) {
-                $type .= '(';
+            if ($token->is(Token::TYPE_OPERATOR, '(')) {
+                $attr = '';
                 while (true) {
                     $token = $this->scaner->nextToken();
                     if ($token === null) {
                         throw new Exception('');
                     }
-                    if ($token->type === MysqliToken::TYPE_OPERATOR) {
+                    if ($token->type === Token::TYPE_OPERATOR) {
                         if ($token->value === ')') {
-                            $type .= ')';
+                            $field->set('attr', $attr);
                             $token = $this->scaner->nextToken();
                             break;
                         } elseif ($token->value === ',') {
-                            $type .= ',';
+                            $attr .= ',';
                         } else {
                             throw new Exception('');
                         }
-                    } elseif ($token->type === MysqliToken::TYPE_KEYWORD) {
-                        $type .= $token->value;
+                    } elseif ($token->type === Token::TYPE_KEYWORD) {
+                        $attr .= $token->value;
                     } else {
                         throw new Exception('');
                     }
@@ -434,28 +434,23 @@ class MysqliCreateTable
             }
         }
 
-        $len = '';
         if (isset(self::DEFAULT_LEN[$type])) {
-            $len = '(' . self::DEFAULT_LEN[$type] . ')';
+            $field->set('attr', self::DEFAULT_LEN[$type]);
         }
 
-        $tail = '';
-
         while (true) {
-            if ($token->is(MysqliToken::TYPE_KEYWORD, 'UNSIGNED')) {
-                $tail .= ' unsigned';
+            if ($token->is(Token::TYPE_KEYWORD, 'UNSIGNED')) {
+                $field->set('unsigned', true);
                 if ($type === 'int') {
-                    $len = '(' . self::DEFAULT_LEN['int_unsigned'] . ')';
+                    $field->set('attr', self::DEFAULT_LEN['int_unsigned']);
                 }
-            } elseif ($token->is(MysqliToken::TYPE_KEYWORD, 'ZEROFILL')) {
-                $tail .= ' zerofill';
+            } elseif ($token->is(Token::TYPE_KEYWORD, 'ZEROFILL')) {
+                $field->set('zerofill', true);
             } else {
                 $this->scaner->pushToken($token);
                 break;
             }
             $token = $this->scaner->nextToken();
         }
-
-        return $type . $len . $tail;
     }
 }

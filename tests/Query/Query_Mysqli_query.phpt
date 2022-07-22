@@ -8,31 +8,33 @@ require __DIR__ . '/../bootstrap.php';
 
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
+use Minifw\DB\TableInfo;
 use Minifw\DB\TableUtils;
-use Minifw\DB\TableInfo\Info;
 
 $driver = new Mysqli($config['mysql']);
 Query::setDefaultDriver($driver);
 
 Query::get()->query('drop table if exists `test_table`');
 
-$info = Info::loadFromFile($driver, __DIR__ . '/test_table.json', Info::FORMAT_JSON);
+$info = TableInfo::loadFromFile($driver, __DIR__ . '/test_table.json', TableInfo::FORMAT_JSON);
 $diff = TableUtils::dbCmp($driver, $info);
 $diff->apply($driver);
 
 $diff = TableUtils::dbCmp($driver, $info);
+
+echo $diff->display();
 
 var_dump($diff->isEmpty());
 
 echo "\n";
 
 $data = [
-    ['name' => '张三', 'age' => 26, 'address' => '', 'code' => '123'],
-    ['name' => '李四', 'age' => '55', 'address' => '北京', 'code' => ''],
-    ['name' => '王五', 'age' => '35', 'address' => '上海', 'code' => '代码1'],
-    ['name' => '赵六', 'age' => '34', 'address' => '广州', 'code' => ['expr', '`address`']],
-    ['name' => '李华', 'age' => '16', 'address' => '<p>代码</p>', 'code' => ['rich', '<p>代码</p>']],
-    ['name' => '韩梅梅', 'age' => 29, 'address' => '', 'code' => ''],
+    ['name' => '张三', 'age' => 26, 'address' => '', 'code' => '123', 'sex' => '男', 'money' => '100.00'],
+    ['name' => '李四', 'age' => '55', 'address' => '北京', 'code' => '', 'sex' => '女', 'money' => '200.00'],
+    ['name' => '王五', 'age' => '35', 'address' => '上海', 'code' => '代码1', 'sex' => '未知'],
+    ['name' => '赵六', 'age' => '34', 'address' => '广州', 'code' => ['expr', '`address`'], 'sex' => '男', 'money' => '53.01'],
+    ['name' => '李华', 'age' => '16', 'address' => '<p>代码</p>', 'code' => ['rich', '<p>代码</p>'], 'sex' => '女'],
+    ['name' => '韩梅梅', 'age' => 29, 'address' => '', 'code' => '', 'sex' => '女'],
 ];
 
 foreach ($data as $v) {
@@ -115,12 +117,12 @@ echo json_encode($result, JSON_UNESCAPED_UNICODE) . "\n\n";
 bool(true)
 
 select * from `test_table`;
-1:26:张三::123
-2:55:李四:北京:
-3:35:王五:上海:代码1
-4:34:赵六:广州:广州
-5:16:李华:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>
-6:29:韩梅梅::
+1:26:张三::123:100.00:男
+2:55:李四:北京::200.00:女
+3:35:王五:上海:代码1:0.00:未知
+4:34:赵六:广州:广州:53.01:男
+5:16:李华:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>:0.00:女
+6:29:韩梅梅:::0.00:女
 
 select `name`,`age`,`address`,`code` from `test_table`;
 张三:26::123

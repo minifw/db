@@ -9,11 +9,11 @@ namespace Minifw\DB\Test;
 
 require __DIR__ . '/../bootstrap.php';
 
+use Minifw\Common\File;
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
+use Minifw\DB\TableInfo;
 use Minifw\DB\TableUtils;
-use Minifw\Common\File;
-use Minifw\DB\TableInfo\Info;
 
 $driver = new Mysqli($config['mysql']);
 Query::setDefaultDriver($driver);
@@ -27,7 +27,7 @@ if (file_exists(APP_ROOT . '/tmp/tests/db')) {
 }
 
 $dirList = [
-    ['name' => 'json', 'format' => Info::FORMAT_JSON],
+    ['name' => 'json', 'format' => TableInfo::FORMAT_JSON],
 ];
 
 foreach ($dirList as $dirInfo) {
@@ -85,8 +85,8 @@ function testExport($dirInfo, $driver)
 
     foreach ($tables as $table) {
         echo $table . "\n";
-        $newInfo = Info::loadFromFile($driver, $dir . '/' . $table . '.json', Info::FORMAT_JSON);
-        $oldInfo = Info::loadFromFile($driver, __DIR__ . '/old/' . $dirInfo['name'] . '/' . $table . '.json', Info::FORMAT_JSON);
+        $newInfo = TableInfo::loadFromFile($driver, $dir . '/' . $table . '.json', TableInfo::FORMAT_JSON);
+        $oldInfo = TableInfo::loadFromFile($driver, __DIR__ . '/old/' . $dirInfo['name'] . '/' . $table . '.json', TableInfo::FORMAT_JSON);
 
         $diff = $newInfo->cmp($oldInfo);
         var_dump($diff->isEmpty());

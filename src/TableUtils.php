@@ -19,10 +19,6 @@
 
 namespace Minifw\DB;
 
-use Minifw\Common\Exception;
-use Minifw\DB\Driver\Driver;
-use Minifw\DB\TableInfo\Info;
-
 class TableUtils
 {
     public static function exportAllDb(Driver $drvier, string $dir, int $format = self::FORMAT_JSON, $table_list = '') : void
@@ -46,7 +42,7 @@ class TableUtils
         }
 
         foreach ($tables as $table) {
-            $info = Info::loadFromDb($drvier, $table);
+            $info = TableInfo::loadFromDb($drvier, $table);
             $info->save($format, $dir, $table);
         }
     }
@@ -79,9 +75,9 @@ class TableUtils
         return implode("\n", $lines);
     }
 
-    public static function dbCmp(Driver $driver, Info $newCfg) : TableDiff
+    public static function dbCmp(Driver $driver, TableInfo $newCfg) : TableDiff
     {
-        $oldCfg = Info::loadFromDb($driver, $newCfg->tbname);
+        $oldCfg = TableInfo::loadFromDb($driver, $newCfg->tbname);
 
         return $newCfg->cmp($oldCfg);
     }
@@ -106,7 +102,7 @@ class TableUtils
                 $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
                 require_once($classPath . '/' . $file);
 
-                $newCfg = Info::loadFromClass($classname);
+                $newCfg = TableInfo::loadFromClass($classname);
                 $diff = self::dbCmp($driver, $newCfg);
                 $diff->apply($driver);
             }
@@ -138,7 +134,7 @@ class TableUtils
                 $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
                 require_once($classPath . '/' . $file);
 
-                $newCfg = Info::loadFromClass($classname);
+                $newCfg = TableInfo::loadFromClass($classname);
                 $diffObj = self::dbCmp($driver, $newCfg);
                 if (!$diffObj->isEmpty()) {
                     $diff[$newCfg->tbname] = $diffObj;
@@ -170,7 +166,7 @@ class TableUtils
                 continue;
             }
 
-            $newCfg = Info::loadFromFile($driver, $path, $format);
+            $newCfg = TableInfo::loadFromFile($driver, $path, $format);
             $diff = self::dbCmp($driver, $newCfg);
             $diff->apply($driver);
         }
@@ -196,7 +192,7 @@ class TableUtils
                 continue;
             }
 
-            $newCfg = Info::loadFromFile($driver, $path, $format);
+            $newCfg = TableInfo::loadFromFile($driver, $path, $format);
             $diffObj = self::dbCmp($driver, $newCfg);
 
             if ($diffObj->isEmpty()) {

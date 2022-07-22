@@ -23,7 +23,7 @@ use Minifw\Common\Exception;
 
 class Query
 {
-    public static function get(?string $tbname = null, ?Driver\Driver $driver = null) : self
+    public static function get(?string $tbname = null, ?Driver $driver = null) : self
     {
         $obj = new self($driver);
         if (!empty($tbname)) {
@@ -33,17 +33,17 @@ class Query
         return $obj;
     }
 
-    public static function setDefaultDriver(Driver\Driver $driver) : void
+    public static function setDefaultDriver(Driver $driver) : void
     {
         self::$defaultDriver = $driver;
     }
 
-    public static function getDefaultDriver() : Driver\Driver
+    public static function getDefaultDriver() : Driver
     {
         return self::$defaultDriver;
     }
 
-    public function __construct(?Driver\Driver $driver = null)
+    public function __construct(?Driver $driver = null)
     {
         if (!empty($driver)) {
             $this->driver = $driver;
@@ -213,7 +213,7 @@ class Query
         }
     }
 
-    public function getDriver() : Driver\Driver
+    public function getDriver() : Driver
     {
         return $this->driver;
     }
@@ -654,8 +654,8 @@ class Query
             return $bind_key;
         }
     }
-    protected Driver\Driver $driver;
-    protected static ?Driver\Driver $defaultDriver = null;
+    protected Driver $driver;
+    protected static ?Driver $defaultDriver = null;
     protected string $tbname;
     protected string $alis;
     ///////////////////

@@ -17,11 +17,11 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\MysqliParser;
+namespace Minifw\DB\Parser\MysqliParser;
 
 use Minifw\Common\Exception;
 
-class MysqliScanner
+class Scanner
 {
     protected string $sql = '';
     protected int $index = 0;
@@ -106,12 +106,12 @@ class MysqliScanner
         return $token->value;
     }
 
-    public function pushToken(MysqliToken $token) : void
+    public function pushToken(Token $token) : void
     {
         array_push($this->tokenCache, $token);
     }
 
-    public function nextToken() : ?MysqliToken
+    public function nextToken() : ?Token
     {
         if (!empty($this->tokenCache)) {
             return array_pop($this->tokenCache);
@@ -124,20 +124,20 @@ class MysqliScanner
         if ($char == self::$escapeChar) { //一个mysql域
             $name = $this->nextString(self::$escapeChar);
 
-            return new MysqliToken(MysqliToken::TYPE_FIELD, $name);
+            return new Token(Token::TYPE_FIELD, $name);
         } elseif ($char == self::$quoteChar) { //字符串
             $string = $this->nextString(self::$quoteChar);
 
-            return new MysqliToken(MysqliToken::TYPE_STRING, $string);
+            return new Token(Token::TYPE_STRING, $string);
         } elseif (isset(self::$oprator[$char])) {
-            return new MysqliToken(MysqliToken::TYPE_OPERATOR, $char);
+            return new Token(Token::TYPE_OPERATOR, $char);
         } else {
             $this->index--;
 
             $word = $this->nextKeyword();
             $word = strtoupper($word);
 
-            return new MysqliToken(MysqliToken::TYPE_KEYWORD, $word);
+            return new Token(Token::TYPE_KEYWORD, $word);
         }
     }
 
@@ -210,16 +210,16 @@ class MysqliScanner
         while (!empty($this->tokenCache)) {
             $token = array_pop($this->tokenCache);
             switch ($token->type) {
-                case MysqliToken::TYPE_STRING:
+                case Token::TYPE_STRING:
                     $sql .= '\'' . str_replace('\'', '\'\'', $token->value) . '\' ';
                     break;
-                case MysqliToken::TYPE_FIELD:
+                case Token::TYPE_FIELD:
                     $sql .= '`' . str_replace('`', '``', $token->value) . '` ';
                     break;
-                case MysqliToken::TYPE_OPERATOR:
+                case Token::TYPE_OPERATOR:
                     $sql .= $token->value;
                     break;
-                case MysqliToken::TYPE_KEYWORD:
+                case Token::TYPE_KEYWORD:
                     $sql .= $token->value . ' ';
                     break;
             }

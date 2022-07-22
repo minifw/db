@@ -17,18 +17,11 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo;
+namespace Minifw\DB;
 
 use Minifw\Common\Exception;
-use Minifw\DB\Table;
-use Minifw\DB\Driver\Mysqli;
-use Minifw\DB\Driver\Sqlite3;
-use Minifw\Common\File;
-use Minifw\Common\FileUtils;
-use Minifw\DB\Driver\Driver;
-use Minifw\DB\TableDiff;
 
-abstract class Info
+abstract class TableInfo
 {
     const FORMAT_ARRAY = 1;
     const FORMAT_SERIALIZE = 2;
@@ -51,7 +44,7 @@ abstract class Info
         if ($data['type'] !== 'table' && $data['type'] !== 'view') {
             throw new Exception('数据不合法');
         }
-        $infoClass = __NAMESPACE__ . '\\' . ucfirst($driver->getName()) . ucfirst($data['type']) . 'Info';
+        $infoClass = __NAMESPACE__ . '\\TableInfo\\' . ucfirst($driver->getName()) . ucfirst($data['type']) . 'Info';
 
         return new $infoClass($driver, $data);
     }

@@ -20,12 +20,14 @@
 namespace Minifw\DB\Driver;
 
 use Minifw\Common\Exception;
-use Minifw\DB;
-use Minifw\DB\TableInfo\Info;
-use Minifw\DB\MysqliParser\MysqliScanner;
-use Minifw\DB\MysqliParser\MysqliToken;
+use Minifw\DB\Driver;
+use Minifw\DB\Parser\MysqliParser\CreateTable;
+use Minifw\DB\Parser\MysqliParser\CreateView;
+use Minifw\DB\Parser\MysqliParser\Scanner;
+use Minifw\DB\Parser\MysqliParser\Token;
+use Minifw\DB\TableInfo;
 
-class Mysqli extends DB\Driver\Driver
+class Mysqli extends Driver
 {
     public function escapeLike(string $str) : string
     {
@@ -133,26 +135,26 @@ class Mysqli extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : ?Info
+    public function getTableInfo(string $table) : ?TableInfo
     {
         $create_sql = $this->showCreate($table);
         if ($create_sql === null) {
             return null;
         }
 
-        $scaner = new MysqliScanner($create_sql);
+        $scaner = new Scanner($create_sql);
 
-        $scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'CREATE');
-        $value = $scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+        $scaner->nextTokenIs(Token::TYPE_KEYWORD, 'CREATE');
+        $value = $scaner->nextTokenAs(Token::TYPE_KEYWORD);
 
         if ($value == 'TABLE') {
             $status = $this->getTableStatus($table);
             $fields = $this->getColumns($table);
-            $parser = new DB\MysqliParser\MysqliCreateTable($scaner, $status, $fields);
+            $parser = new CreateTable($scaner, $status, $fields);
 
             return $parser->parse($this);
         } else {
-            $parser = new DB\MysqliParser\MysqliCreateView($scaner);
+            $parser = new CreateView($scaner);
 
             return $parser->parse($this);
         }

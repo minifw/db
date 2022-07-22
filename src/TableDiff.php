@@ -19,9 +19,6 @@
 
 namespace Minifw\DB;
 
-use Minifw\Common\Exception;
-use Minifw\DB\Driver\Driver;
-
 class TableDiff
 {
     protected string $tbname;

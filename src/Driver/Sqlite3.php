@@ -20,10 +20,10 @@
 namespace Minifw\DB\Driver;
 
 use Minifw\Common\Exception;
-use Minifw\DB;
-use Minifw\DB\TableInfo\Info;
+use Minifw\DB\Driver;
+use Minifw\DB\TableInfo;
 
-class Sqlite3 extends DB\Driver\Driver
+class Sqlite3 extends Driver
 {
     public function escapeLike(string $str) : string
     {
@@ -100,11 +100,11 @@ class Sqlite3 extends DB\Driver\Driver
         return $data[0];
     }
 
-    public function getTableInfo(string $table) : Info
+    public function getTableInfo(string $table) : TableInfo
     {
         $create_sql = $this->showCreate($table);
 
-        $parser = new DB\SqlParser\SqliteCreate();
+        $parser = new SqliteCreate();
         $parser->init($create_sql);
         $info = $parser->parse();
 

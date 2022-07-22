@@ -19,19 +19,20 @@
 
 namespace Minifw\DB\TableInfo\MysqlTableInfo;
 
-use Minifw\DB\Driver\Driver;
 use Minifw\Common\Exception;
-use Minifw\DB\TableDiff;
 
 class Field
 {
     protected string $name;
     protected string $type;
+    protected string $attr = '';
     protected string $comment = '';
     protected string $charset = '';
     protected string $collate = '';
     protected bool $nullable = false;
     protected bool $autoIncrement = false;
+    protected bool $unsigned = false;
+    protected bool $zerofill = false;
 
     /**
      * 可能会未初始化.
@@ -58,7 +59,7 @@ class Field
             throw new Exception('参数不合法');
         }
 
-        $fields = ['name', 'type', 'comment', 'nullable', 'autoIncrement'];
+        $fields = ['name', 'type', 'attr', 'comment', 'nullable', 'autoIncrement', 'unsigned', 'zerofill'];
         foreach ($fields as $field) {
             if (isset($cfg[$field])) {
                 $this->set($field, $cfg[$field]);
@@ -91,6 +92,7 @@ class Field
             'name' => true,
             'type' => true,
             'comment' => false,
+            'attr' => false,
         ];
 
         if (isset($stringFields[$name])) {
@@ -115,7 +117,7 @@ class Field
             } else {
                 $this->{$name} = '';
             }
-        } elseif ($name == 'nullable' || $name == 'autoIncrement') {
+        } elseif ($name == 'nullable' || $name == 'autoIncrement' || $name == 'unsigned' || $name == 'zerofill') {
             if (is_bool($value)) {
                 $this->{$name} = $value;
             } else {
@@ -164,14 +166,28 @@ class Field
             'name' => $this->name,
             'type' => $this->type
         ];
-        if ($this->nullable) {
-            $ret['nullable'] = $this->nullable;
+
+        if ($this->attr !== '') {
+            $ret['attr'] = $this->attr;
         }
+
+        if ($this->unsigned) {
+            $ret['unsigned'] = $this->unsigned;
+        }
+
         if ($this->autoIncrement) {
             $ret['autoIncrement'] = $this->autoIncrement;
         }
 
-        if (!$this->comment !== null && $this->comment !== '') {
+        if ($this->nullable) {
+            $ret['nullable'] = $this->nullable;
+        }
+
+        if ($this->zerofill) {
+            $ret['zerofill'] = $this->zerofill;
+        }
+
+        if ($this->comment !== '') {
             $ret['comment'] = $this->comment;
         }
 
@@ -199,6 +215,18 @@ class Field
             }
         } else {
             $sql = '`' . $this->name . '` ' . $this->type;
+
+            if ($this->attr !== '') {
+                $sql .= '(' . $this->attr . ')';
+            }
+
+            if ($this->unsigned) {
+                $sql .= ' unsigned';
+            }
+
+            if ($this->zerofill) {
+                $sql .= ' zerofill';
+            }
 
             if (self::isCharType($this->type)) {
                 $sql .= ' CHARACTER SET ' . $this->charset . ' COLLATE ' . $this->collate;

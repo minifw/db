@@ -71,5 +71,11 @@ return (new PhpCsFixer\Config())
         'phpdoc_no_empty_return' => true,
         'phpdoc_no_useless_inheritdoc' => true,
         'no_superfluous_phpdoc_tags' => ['allow_mixed' => true, 'allow_unused_params' => true],
+        'fully_qualified_strict_types' => true,
+        'no_leading_import_slash' => true,
+        'no_unneeded_import_alias' => true,
+        'no_unused_imports' => true,
+        'ordered_imports' => ['sort_algorithm' => 'alpha', 'imports_order' => ['class', 'function', 'const']],
+        'single_line_after_imports' => true,
     ])
     ->setLineEnding("\n");

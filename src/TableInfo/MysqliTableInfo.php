@@ -19,14 +19,15 @@
 
 namespace Minifw\DB\TableInfo;
 
-use Minifw\DB\Driver\Driver;
 use Minifw\Common\Exception;
-use Minifw\DB\TableInfo\MysqlTableInfo\Status;
+use Minifw\DB\Driver;
+use Minifw\DB\TableDiff;
+use Minifw\DB\TableInfo;
 use Minifw\DB\TableInfo\MysqlTableInfo\Field;
 use Minifw\DB\TableInfo\MysqlTableInfo\Index;
-use Minifw\DB\TableDiff;
+use Minifw\DB\TableInfo\MysqlTableInfo\Status;
 
-class MysqliTableInfo extends Info
+class MysqliTableInfo extends TableInfo
 {
     protected Status $status;
 
@@ -176,7 +177,7 @@ class MysqliTableInfo extends Info
 
     /////////////////////////////
 
-    public function cmp(?Info $oldInfo) : TableDiff
+    public function cmp(?TableInfo $oldInfo) : TableDiff
     {
         if ($oldInfo !== null && !($oldInfo instanceof self)) {
             throw new Exception('数据不合法');

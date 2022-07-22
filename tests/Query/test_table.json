@@ -11,31 +11,50 @@
     "field": [
         {
             "name": "id",
-            "type": "int(10) unsigned",
+            "type": "int",
+            "attr": "10",
+            "unsigned": true,
             "autoIncrement": true,
             "comment": "ID"
         },
         {
             "name": "age",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "comment": "年龄"
         },
         {
             "name": "name",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "comment": "姓名"
         },
         {
             "name": "address",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "default": "",
             "comment": "地址"
         },
         {
             "name": "code",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "default": "",
             "comment": "代码"
+        },
+        {
+            "name": "money",
+            "type": "decimal",
+            "attr": "20,2",
+            "default": "0.00",
+            "comment": "账户余额"
+        },
+        {
+            "name": "sex",
+            "type": "enum",
+            "attr": "'男','女','未知'",
+            "comment": "性别"
         }
     ],
     "index": [

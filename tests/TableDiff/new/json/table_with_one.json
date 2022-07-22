@@ -10,7 +10,8 @@
     "field": [
         {
             "name": "intfield",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "comment": "A int field"
         },
         {
@@ -18,18 +19,19 @@
             "type": "text",
             "charset": "utf8mb4",
             "collate": "utf8mb4_general_ci",
-            "comment": "A new text field",
-            "rowFormat": "Dynamic"
+            "comment": "A new text field"
         },
         {
             "name": "intfield_def",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "default": "0",
             "comment": "A int field"
         },
         {
             "name": "charfield_def",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "default": "",
             "comment": "A varchar field"
         }

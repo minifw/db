@@ -11,7 +11,8 @@
     "field": [
         {
             "name": "intfield",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "comment": "A int field"
         }
     ],

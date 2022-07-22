@@ -19,7 +19,6 @@
 
 namespace Minifw\DB\TableInfo\MysqlTableInfo;
 
-use Minifw\DB\Driver\Driver;
 use Minifw\Common\Exception;
 use Minifw\DB\TableDiff;
 

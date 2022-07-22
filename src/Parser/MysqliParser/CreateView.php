@@ -1,17 +1,16 @@
 <?php
 
-namespace Minifw\DB\MysqliParser;
+namespace Minifw\DB\Parser\MysqliParser;
 
 use Minifw\Common\Exception;
-use Minifw\DB\TableInfo\Info;
 use Minifw\DB\TableInfo\MysqliViewInfo;
 
-class MysqliCreateView
+class CreateView
 {
-    protected MysqliScanner $scaner;
+    protected Scanner $scaner;
     protected MysqliViewInfo $obj;
 
-    public function __construct(MysqliScanner $scanner)
+    public function __construct(Scanner $scanner)
     {
         $this->scaner = $scanner;
     }
@@ -28,40 +27,40 @@ class MysqliCreateView
 
     protected function _parseSql()
     {
-        $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'CREATE');
+        $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'CREATE');
 
         while (true) {
-            $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+            $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
 
             switch ($value) {
                 case 'ALGORITHM':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
 
                     $this->obj->set('algorithm', strtolower($value));
                     break;
                 case 'DEFINER':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '=');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '=');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_FIELD);
                     //$definer = '`' . $value . '`';
 
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_OPERATOR, '@');
+                    $this->scaner->nextTokenIs(Token::TYPE_OPERATOR, '@');
 
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD);
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_FIELD);
                     //$definer .= '@`' . $value . '`';
                     break;
                 case 'SQL':
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'SECURITY');
-                    $value = $this->scaner->nextTokenAs(MysqliToken::TYPE_KEYWORD);
+                    $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'SECURITY');
+                    $value = $this->scaner->nextTokenAs(Token::TYPE_KEYWORD);
 
                     $this->obj->set('security', strtolower($value));
                     break;
                 case 'VIEW':
-                    $tbname = $this->scaner->nextTokenAs(MysqliToken::TYPE_FIELD);
+                    $tbname = $this->scaner->nextTokenAs(Token::TYPE_FIELD);
                     $this->obj->set('tbname', $tbname);
 
-                    $this->scaner->nextTokenIs(MysqliToken::TYPE_KEYWORD, 'AS');
+                    $this->scaner->nextTokenIs(Token::TYPE_KEYWORD, 'AS');
                     break 2;
                 default:
                     throw new Exception('');

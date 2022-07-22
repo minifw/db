@@ -17,12 +17,10 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Driver;
+namespace Minifw\DB;
 
 use Minifw\Common\Exception;
-use Minifw\DB\Query;
 use PDO;
-use Minifw\DB\TableInfo\Info;
 
 abstract class Driver
 {
@@ -240,5 +238,5 @@ abstract class Driver
 
     abstract public function showCreate(string $table) : ?string;
 
-    abstract public function getTableInfo(string $table) : ?Info;
+    abstract public function getTableInfo(string $table) : ?TableInfo;
 }

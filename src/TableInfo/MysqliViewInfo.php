@@ -20,10 +20,12 @@
 namespace Minifw\DB\TableInfo;
 
 use Minifw\Common\Exception;
-use Minifw\DB\Driver\Driver;
+use Minifw\DB\Driver;
+use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\TableDiff;
+use Minifw\DB\TableInfo;
 
-class MysqliViewInfo extends Info
+class MysqliViewInfo extends TableInfo
 {
     protected string $algorithm;
     protected string $security;
@@ -114,7 +116,7 @@ class MysqliViewInfo extends Info
 
     /////////////////////////////
 
-    public function cmp(?Info $oldInfo) : TableDiff
+    public function cmp(?TableInfo $oldInfo) : TableDiff
     {
         if ($oldInfo !== null && !($oldInfo instanceof self)) {
             throw new Exception('数据不合法');

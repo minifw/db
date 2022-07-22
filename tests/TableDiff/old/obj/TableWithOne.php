@@ -14,7 +14,7 @@ class TableWithOne extends Table
         'collate' => 'utf8mb4_general_ci',
     ];
     public static array $field = [
-        'intfield' => ['type' => 'int(11)', 'comment' => 'A int field'],
+        'intfield' => ['type' => 'int', 'attr' => '11', 'comment' => 'A int field'],
     ];
     public static array $index = [
     ];

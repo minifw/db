@@ -20,7 +20,6 @@
 namespace Minifw\DB;
 
 use Minifw\Common\Exception;
-use Minifw\DB\Driver\Driver;
 
 abstract class Table
 {

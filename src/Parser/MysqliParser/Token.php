@@ -17,11 +17,11 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\MysqliParser;
+namespace Minifw\DB\Parser\MysqliParser;
 
 use Minifw\Common\Exception;
 
-class MysqliToken
+class Token
 {
     protected int $type;
     protected string $value;

@@ -11,18 +11,22 @@
     "field": [
         {
             "name": "id",
-            "type": "int(10) unsigned",
+            "type": "int",
+            "attr": "10",
+            "unsigned": true,
             "autoIncrement": true,
             "comment": "ID"
         },
         {
             "name": "intfield",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "comment": "A int field"
         },
         {
             "name": "charfield",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "comment": "A varchar field"
         },
         {
@@ -34,15 +38,30 @@
         },
         {
             "name": "intfield_def333",
-            "type": "int(11)",
+            "type": "int",
+            "attr": "11",
             "default": "0",
             "comment": "A int field333"
         },
         {
             "name": "charfield_def",
-            "type": "varchar(200)",
+            "type": "varchar",
+            "attr": "200",
             "default": "",
             "comment": "A varchar field"
+        },
+        {
+            "name": "decimal_f1",
+            "type": "decimal",
+            "attr": "20,2",
+            "default": "0.01",
+            "comment": "A decimal_f field"
+        },
+        {
+            "name": "enum_f1",
+            "type": "enum",
+            "attr": "'Smail','Medium','Large'",
+            "comment": "A decimal_f field"
         }
     ],
     "index": [
