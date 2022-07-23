@@ -28,6 +28,9 @@
         "bamarni-bin": {
             "bin-links": false,
             "forward-command": true
+        },
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
         }
     },
     "require": {
