@@ -5,7 +5,7 @@
     backupGlobals="true"
     processIsolation="true"
     cacheResultFile="./tmp/.phpunit.result.cache"
-    verbose="true">
+    verbose="false">
     <testsuites>
         <testsuite name="large">
             <directory suffix=".phpt">tests</directory>

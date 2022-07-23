@@ -19,12 +19,30 @@
 
 namespace Minifw\DB;
 
+use Minifw\Common\Exception;
+
 class TableDiff
 {
     protected string $tbname;
     protected array $display = [];
     protected array $sqlTrans = [];
     protected array $sqlLast = [];
+    protected bool $possible = true;
+
+    public function isPossible() : bool
+    {
+        return $this->possible;
+    }
+
+    public function setPossible(bool $value)
+    {
+        $this->possible = $value;
+
+        if (!$value) {
+            $this->sqlTrans = [];
+            $this->sqlLast = [];
+        }
+    }
 
     public function setTbname(string $tbname)
     {
@@ -58,16 +76,35 @@ class TableDiff
 
     public function isEmpty()
     {
+        if (!$this->possible) {
+            return false;
+        }
+
         return empty($this->sqlTrans) && empty($this->sqlLast);
     }
 
-    public function apply(Driver $driver) : void
+    public function apply(Driver $driver, $useTransaction = false) : void
     {
-        $sqls = $this->getSql();
-        foreach ($sqls as $sql) {
-            if (!empty($sql)) {
-                $driver->exec($sql);
+        try {
+            if ($useTransaction) {
+                $driver->begin();
             }
+
+            $sqls = $this->getSql();
+            foreach ($sqls as $sql) {
+                if (!empty($sql)) {
+                    $driver->exec($sql);
+                }
+            }
+
+            if ($useTransaction) {
+                $driver->commit();
+            }
+        } catch (Exception $ex) {
+            if ($useTransaction) {
+                $driver->rollback();
+            }
+            throw $ex;
         }
     }
 
@@ -78,13 +115,13 @@ class TableDiff
         }
 
         $lines = [];
-        $lines[] = $this->tbname . "\n";
+        $lines[] = '--------' . $this->tbname . '--------';
 
         if (!empty($this->display)) {
             $lines[] = implode("\n", $this->display);
         }
 
-        $lines[] = "\n";
+        $lines[] = '=============================';
 
         $trans = $this->getSql();
         if (!empty($trans)) {

@@ -17,22 +17,22 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Parser\Mysqli;
+namespace Minifw\DB\Parser\Sqlite3;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Parser;
 
 class Token extends Parser\Token
 {
-    const TYPE_FIELD = 1;
-    const TYPE_STRING = 2;
-    const TYPE_KEYWORD = 3;
-    const TYPE_OPERATOR = 4;
+    const TYPE_STRING = 1;
+    const TYPE_KEYWORD = 2;
+    const TYPE_OPERATOR = 3;
+    const TYPE_COMMENT = 4;
     public static array $typeHash = [
-        self::TYPE_FIELD => 'fld',
         self::TYPE_STRING => 'str',
         self::TYPE_KEYWORD => 'kwd',
-        self::TYPE_OPERATOR => 'opt'
+        self::TYPE_OPERATOR => 'opt',
+        self::TYPE_COMMENT => 'cmt',
     ];
 
     public function __get(string $name)

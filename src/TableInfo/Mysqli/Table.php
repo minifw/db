@@ -21,6 +21,7 @@ namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
+use Minifw\DB\Parser\Scanner;
 use Minifw\DB\TableDiff;
 use Minifw\DB\TableInfo;
 
@@ -142,7 +143,7 @@ class Table extends TableInfo
     {
         $this->validate();
 
-        $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->tbname . '` (' . $dim;
+        $sql = 'CREATE TABLE IF NOT EXISTS `' . Scanner::escape($this->tbname, '`') . '` (' . $dim;
         $lines = [];
 
         foreach ($this->field as $field) {
@@ -220,7 +221,7 @@ class Table extends TableInfo
 
             $sql = $field->toSql();
             $diff->addDisplay('-[' . $i . '] ' . $sql);
-            $diff->addTrans('ALTER TABLE `' . $this->tbname . '` DROP `' . $name . '`');
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` DROP `' . Scanner::escape($name, '`') . '`');
 
             $removed[$name] = 1;
         }
@@ -240,14 +241,14 @@ class Table extends TableInfo
                 $diff->addDisplay('+[' . $i . '] ' . $to_sql);
 
                 if ($field->isAutoIncrement()) {//对于新增了auto_increment属性的列，需要先添加一个不包含该属性的列，然后建立索引，最后再增加该属性
-                    $diff->addTrans('ALTER TABLE `' . $this->tbname . '` ADD ' . $field->toSql(true) . $tail);
-                    $diff->addLast('ALTER TABLE `' . $this->tbname . '` CHANGE `' . $name . '` ' . $to_sql . $tail);
+                    $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` ADD ' . $field->toSql(true) . $tail);
+                    $diff->addLast('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` CHANGE `' . Scanner::escape($name, '`') . '` ' . $to_sql . $tail);
                 } else {
-                    $diff->addTrans('ALTER TABLE `' . $this->tbname . '` ADD ' . $to_sql . $tail);
+                    $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` ADD ' . $to_sql . $tail);
                 }
             }
 
-            $tail = ' after `' . $name . '`';
+            $tail = ' after `' . Scanner::escape($name, '`') . '`';
         }
     }
 
@@ -290,10 +291,10 @@ class Table extends TableInfo
                     $diff->addDisplay('+[' . $toNo[$name] . '] ' . $to_sql);
 
                     if (!$oldInfo->field[$name]->isAutoIncrement() && $field->isAutoIncrement()) {//对于新增了auto_increment属性的列，需要先添加一个不包含该属性的列，然后建立索引，最后再增加该属性
-                        $diff->addTrans('ALTER TABLE `' . $this->tbname . '` CHANGE `' . $name . '` ' . $field->toSql(true) . $tail);
-                        $diff->addLast('ALTER TABLE `' . $this->tbname . '` CHANGE `' . $name . '` ' . $to_sql . $tail);
+                        $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` CHANGE `' . Scanner::escape($name, '`') . '` ' . $field->toSql(true) . $tail);
+                        $diff->addLast('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` CHANGE `' . Scanner::escape($name, '`') . '` ' . $to_sql . $tail);
                     } else {
-                        $diff->addTrans('ALTER TABLE `' . $this->tbname . '` CHANGE `' . $name . '` ' . $to_sql . $tail);
+                        $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` CHANGE `' . Scanner::escape($name, '`') . '` ' . $to_sql . $tail);
                     }
 
                     foreach ($oldInfo->field as $k1 => $v1) {//调整位置之后，所有在该列之前的列统一后移一位
@@ -303,7 +304,7 @@ class Table extends TableInfo
                     }
                 }
 
-                $tail = ' after `' . $name . '`';
+                $tail = ' after `' . Scanner::escape($name, '`') . '`';
             }
         }
     }
@@ -315,18 +316,18 @@ class Table extends TableInfo
 
             if (!isset($oldInfo->index[$name])) {
                 $diff->addDisplay('+ ' . $to_sql);
-                $diff->addTrans('ALTER TABLE `' . $this->tbname . '` ADD ' . $to_sql);
+                $diff->addTrans('ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` ADD ' . $to_sql);
                 continue;
             }
 
             $from_sql = $oldInfo->index[$name]->toSql(false);
 
             if ($to_sql != $from_sql) {
-                $trans = 'ALTER TABLE `' . $this->tbname . '` DROP';
+                $trans = 'ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` DROP';
                 if ($name == 'PRIMARY') {
                     $trans .= ' PRIMARY KEY';
                 } else {
-                    $trans .= ' INDEX `' . $name . '`';
+                    $trans .= ' INDEX `' . Scanner::escape($name, '`') . '`';
                 }
                 $trans .= ', ADD ' . $to_sql;
 
@@ -349,9 +350,9 @@ class Table extends TableInfo
             }
 
             if ($name == 'PRIMARY') {
-                $trans = 'ALTER TABLE `' . $this->tbname . '` DROP PRIMARY KEY';
+                $trans = 'ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` DROP PRIMARY KEY';
             } else {
-                $trans = 'ALTER TABLE `' . $this->tbname . '` DROP INDEX `' . $name . '`';
+                $trans = 'ALTER TABLE `' . Scanner::escape($this->tbname, '`') . '` DROP INDEX `' . Scanner::escape($name, '`') . '`';
             }
 
             $diff->addTrans($trans);

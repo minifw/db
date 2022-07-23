@@ -17,17 +17,16 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\TableInfo\Mysqli;
+namespace Minifw\DB\TableInfo\Sqlite3;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Parser\Scanner;
 
 class Index
 {
-    protected string $name;
     protected array $fields;
+    protected string $name;
     protected bool $unique = false;
-    protected bool $fulltext = false;
     protected string $comment = '';
 
     public function __construct(?array $cfg = null)
@@ -36,8 +35,8 @@ class Index
             return;
         }
 
-        $fields = ['name', 'fields', 'unique', 'fulltext', 'comment'];
-        foreach ($fields as $name) {
+        $required = ['name', 'fields', 'unique', 'comment'];
+        foreach ($required as $name) {
             if (isset($cfg[$name])) {
                 $this->set($name, $cfg[$name]);
             }
@@ -50,8 +49,12 @@ class Index
             if (!is_string($value) || $value === '') {
                 throw new Exception('数据不合法');
             }
-            $this->name = $value;
-        } elseif ($name == 'unique' || $name == 'fulltext') {
+            if (strtoupper($value) == 'PRIMARY') {
+                $this->name = 'PRIMARY';
+            } else {
+                $this->name = $value;
+            }
+        } elseif ($name == 'unique') {
             if (is_bool($value)) {
                 $this->{$name} = $value;
             } else {
@@ -110,10 +113,6 @@ class Index
             $ret['unique'] = $this->unique;
         }
 
-        if ($this->fulltext) {
-            $ret['fulltext'] = $this->fulltext;
-        }
-
         if ($this->comment !== '') {
             $ret['comment'] = $this->comment;
         }
@@ -121,7 +120,7 @@ class Index
         return $ret;
     }
 
-    public function toSql(bool $inCreate)
+    public function toSql(string $tbname = '', bool $comment = false)
     {
         $sql = '';
         $fields = array_map(function ($str) {
@@ -131,27 +130,19 @@ class Index
         if ($this->name == 'PRIMARY') {
             $sql = 'PRIMARY KEY (`' . implode('`,`', $fields) . '`)';
         } else {
-            if ($inCreate) {
-                if ($this->unique) {
-                    $sql = 'UNIQUE ';
-                } elseif ($this->fulltext) {
-                    $sql = 'FULLTEXT ';
-                }
-                $sql .= 'KEY ';
-            } else {
-                if ($this->unique) {
-                    $sql = 'UNIQUE ';
-                } elseif ($this->fulltext) {
-                    $sql = 'FULLTEXT ';
-                } else {
-                    $sql = 'INDEX ';
-                }
+            if ($tbname === '') {
+                throw new Exception('数据不合法');
             }
-            $sql .= '`' . Scanner::escape($this->name, '`') . '` (`' . implode('`,`', $fields) . '`)';
+            $sql = 'CREATE';
+            if ($this->unique) {
+                $sql .= ' UNIQUE';
+            }
+
+            $sql .= ' INDEX `' . Scanner::escape($this->name, '`') . '` on `' . Scanner::escape($tbname, '`') . '` (`' . implode('`,`', $fields) . '`)';
         }
 
-        if ($this->comment !== '') {
-            $sql .= ' COMMENT \'' . Scanner::escape($this->comment, '\'') . '\'';
+        if ($comment && $this->comment !== '') {
+            $sql .= ' /* ' . $this->comment . ' */';
         }
 
         return $sql;
@@ -166,5 +157,36 @@ class Index
         }
 
         return true;
+    }
+
+    public function isPrimary() : bool
+    {
+        return ($this->name == 'PRIMARY');
+    }
+
+    public function isOnlyField(string $field) : bool
+    {
+        if (count($this->fields) > 1) {
+            return false;
+        }
+
+        foreach ($this->fields as $name) {
+            if ($name != $field) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function has(string $field) : bool
+    {
+        foreach ($this->fields as $name) {
+            if ($name == $field) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

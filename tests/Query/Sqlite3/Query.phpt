@@ -1,9 +1,9 @@
 --TEST--
-Query Mysqli sql query test
+Query Sqlite sql query test
 --SKIPIF--
 <?php
 require __DIR__ . '/../../bootstrap.php';
-if (empty($config['mysqli'])) {
+if (empty($config['sqlite3'])) {
     die('skip');
 } ?>
 --CAPTURE_STDIO--
@@ -12,20 +12,20 @@ STDOUT
 <?php
 require __DIR__ . '/../../bootstrap.php';
 
-use Minifw\DB\Driver\Mysqli;
+use Minifw\DB\Driver\Sqlite3;
 use Minifw\DB\Query;
 use Minifw\DB\TableInfo;
 use Minifw\DB\TableUtils;
 
-$driver = new Mysqli($config['mysqli']);
+$driver = new Sqlite3($config['sqlite3']);
 Query::setDefaultDriver($driver);
 
 Query::get()->query('drop table if exists `test_table`');
 
 $info = TableInfo::loadFromFile($driver, __DIR__ . '/test_table.json', TableInfo::FORMAT_JSON);
-$diff = TableUtils::dbCmp($driver, $info);
-$diff->apply($driver);
 
+$diff = TableUtils::dbCmp($driver, $info);
+$diff->apply($driver, true);
 $diff = TableUtils::dbCmp($driver, $info);
 
 echo $diff->display();
@@ -35,12 +35,12 @@ var_dump($diff->isEmpty());
 echo "\n";
 
 $data = [
-    ['name' => '张三', 'age' => 26, 'address' => '', 'code' => '123', 'sex' => '男', 'money' => '100.00'],
-    ['name' => '李四', 'age' => '55', 'address' => '北京', 'code' => '', 'sex' => '女', 'money' => '200.00'],
-    ['name' => '王五', 'age' => '35', 'address' => '上海', 'code' => '代码1', 'sex' => '未知'],
-    ['name' => '赵六', 'age' => '34', 'address' => '广州', 'code' => ['expr', '`address`'], 'sex' => '男', 'money' => '53.01'],
-    ['name' => '李华', 'age' => '16', 'address' => '<p>代码</p>', 'code' => ['rich', '<p>代码</p>'], 'sex' => '女'],
-    ['name' => '韩梅梅', 'age' => 29, 'address' => '', 'code' => '', 'sex' => '女'],
+    ['name' => '张三', 'no' => '0001', 'age' => 26, 'address' => '', 'code' => '123',  'money' => '100.00'],
+    ['name' => '李四', 'no' => '0002', 'age' => '55', 'address' => '北京', 'code' => '10.25',  'money' => '200.00'],
+    ['name' => '王五', 'no' => '0003', 'age' => '35', 'address' => '上海', 'code' => '代码1'],
+    ['name' => '赵六', 'no' => '0004', 'age' => '34', 'address' => '广州', 'code' => ['expr', '\'address\''],  'money' => '53.01'],
+    ['name' => '李华', 'no' => '0005', 'age' => '16', 'address' => ['rich', '<p>代码</p>']],
+    ['name' => '韩梅梅', 'no' => '0006', 'age' => 29, 'address' => '', 'code' => ''],
 ];
 
 foreach ($data as $v) {
@@ -61,24 +61,24 @@ echo $query->dumpSql() . "\n";
 $result = $query->exec();
 print_result($result);
 
-$query = Query::get('test_table')->select(['name', 'age', 'address', 'code'])->all();
+$query = Query::get('test_table')->select(['name', 'age', 'address', 'no'])->all();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
 print_result($result);
 
-$query = Query::get('test_table')->select(['name', 'age', 'address', 'code'])->first();
+$query = Query::get('test_table')->select(['name', 'age', 'address', 'no'])->first();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
 $val = array_values($result);
 echo implode(':', $val) . "\n\n";
 
-$query = Query::get('test_table')->select(['name', 'age', 'address', 'code'])->order('age', 'asc')->first();
+$query = Query::get('test_table')->select(['name', 'age', 'address', 'no'])->order('age', 'asc')->first();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
 $val = array_values($result);
 echo implode(':', $val) . "\n\n";
 
-$query = Query::get('test_table')->select(['name', 'age', 'address', 'code'])->order('age', 'asc')->limit(3)->all();
+$query = Query::get('test_table')->select(['name', 'age', 'address', 'no'])->order('age', 'asc')->limit(3)->all();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
 print_result($result);
@@ -123,31 +123,31 @@ echo json_encode($result, JSON_UNESCAPED_UNICODE) . "\n\n";
 bool(true)
 
 select * from `test_table`;
-1:26:张三::123:100.00:男
-2:55:李四:北京::200.00:女
-3:35:王五:上海:代码1:0.00:未知
-4:34:赵六:广州:广州:53.01:男
-5:16:李华:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>:0.00:女
-6:29:韩梅梅:::0.00:女
+1:0001:26:张三::123.0:100.00
+2:0002:55:李四:北京:10.25:200.00
+3:0003:35:王五:上海:代码1:0
+4:0004:34:赵六:广州:address:53.01
+5:0005:16:李华:<p>代码</p>:0.0:0
+6:0006:29:韩梅梅:::0
 
-select `name`,`age`,`address`,`code` from `test_table`;
-张三:26::123
-李四:55:北京:
-王五:35:上海:代码1
-赵六:34:广州:广州
-李华:16:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>
-韩梅梅:29::
+select `name`,`age`,`address`,`no` from `test_table`;
+张三:26::0001
+李四:55:北京:0002
+王五:35:上海:0003
+赵六:34:广州:0004
+李华:16:<p>代码</p>:0005
+韩梅梅:29::0006
 
-select `name`,`age`,`address`,`code` from `test_table`;
-张三:26::123
+select `name`,`age`,`address`,`no` from `test_table`;
+张三:26::0001
 
-select `name`,`age`,`address`,`code` from `test_table` order by age;
-李华:16:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>
+select `name`,`age`,`address`,`no` from `test_table` order by age;
+李华:16:<p>代码</p>:0005
 
-select `name`,`age`,`address`,`code` from `test_table` order by age limit 3;
-李华:16:&lt;p&gt;代码&lt;/p&gt;:<p>代码</p>
-张三:26::123
-韩梅梅:29::
+select `name`,`age`,`address`,`no` from `test_table` order by age limit 3;
+李华:16:<p>代码</p>:0005
+张三:26::0001
+韩梅梅:29::0006
 
 select `id`,`name` from `test_table` order by id limit 3;
 {"1":"张三","2":"李四","3":"王五"}

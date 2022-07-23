@@ -17,23 +17,12 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Parser\Mysqli;
+namespace Minifw\DB\Parser;
 
-use Minifw\Common\Exception;
-use Minifw\DB\Parser;
-
-class Token extends Parser\Token
+class Token
 {
-    const TYPE_FIELD = 1;
-    const TYPE_STRING = 2;
-    const TYPE_KEYWORD = 3;
-    const TYPE_OPERATOR = 4;
-    public static array $typeHash = [
-        self::TYPE_FIELD => 'fld',
-        self::TYPE_STRING => 'str',
-        self::TYPE_KEYWORD => 'kwd',
-        self::TYPE_OPERATOR => 'opt'
-    ];
+    protected int $type;
+    protected string $value;
 
     public function __get(string $name)
     {
@@ -44,14 +33,18 @@ class Token extends Parser\Token
         return null;
     }
 
+    public function is(int $type, string $value) : bool
+    {
+        if ($this->type == $type && $this->value === $value) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function __construct(int $type, string $value)
     {
-        if ($type === '') {
-            throw new Exception('数据不合法');
-        }
-        if (!isset(self::$typeHash[$type])) {
-            throw new Exception('数据不合法');
-        }
-        parent::__construct($type, $value);
+        $this->type = $type;
+        $this->value = $value;
     }
 }

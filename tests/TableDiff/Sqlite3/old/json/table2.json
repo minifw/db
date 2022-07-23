@@ -1,0 +1,54 @@
+{
+    "type": "table",
+    "tbname": "table2",
+    "status": {
+        "rowid": false,
+        "comment": "table2"
+    },
+    "field": [
+        {
+            "name": "main_id",
+            "type": "int",
+            "comment": "顶级ID"
+        },
+        {
+            "name": "sub_id",
+            "type": "int",
+            "comment": "子ID"
+        },
+        {
+            "name": "no",
+            "type": "text",
+            "comment": "编号"
+        },
+        {
+            "name": "name",
+            "type": "text",
+            "comment": "姓名"
+        },
+        {
+            "name": "age",
+            "type": "integer",
+            "comment": "年龄"
+        },
+        {
+            "name": "address",
+            "type": "text",
+            "default": "",
+            "comment": "地址"
+        }
+    ],
+    "index": [
+        {
+            "name": "PRIMARY",
+            "fields": ["main_id", "sub_id"],
+            "comment": "主键"
+        },
+        {
+            "name": "table2_no",
+            "unique": true,
+            "fields": ["no"]
+        }
+    ],
+    "initTableSql": "insert into `table2` (`main_id`,`sub_id`,`no`,`name`,`age`) values ('1','1','0001','张三','33'), ('1','2','0002','李四','15'),('2','1','0003','王五','22'), ('2','2','0004','赵六','56'),('2','3','0005','李雷','32'), ('3','1','0006','小明','19')"
+}

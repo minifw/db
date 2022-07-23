@@ -17,7 +17,7 @@
  * along with this library.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-namespace Minifw\DB\Parser\Mysqli;
+namespace Minifw\DB\Parser\Sqlite3;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Parser;
@@ -33,12 +33,15 @@ class Scanner extends Parser\Scanner
     public static $oprator = [
         '(' => 1,
         ')' => 1,
-        '=' => 1,
         ',' => 1,
-        '@' => 1,
     ];
-    public static string $escapeChar = '`';
-    public static string $quoteChar = '\'';
+    public static $quote = [
+        '`' => 1,
+        '\'' => 1,
+        '"' => 1,
+    ];
+    const COMMENT_BEGIN = '/*';
+    const COMMENT_END = '*/';
 
     public function __construct(string $sql)
     {
@@ -55,16 +58,21 @@ class Scanner extends Parser\Scanner
         if ($char === null) {
             return null;
         }
-        if ($char == self::$escapeChar) { //一个mysql域
-            $name = $this->nextString(self::$escapeChar);
+        if (isset(self::$quote[$char])) {
+            $name = $this->nextString($char);
 
-            return new Token(Token::TYPE_FIELD, $name);
-        } elseif ($char == self::$quoteChar) { //字符串
-            $string = $this->nextString(self::$quoteChar);
-
-            return new Token(Token::TYPE_STRING, $string);
+            return new Token(Token::TYPE_STRING, $name);
         } elseif (isset(self::$oprator[$char])) {
             return new Token(Token::TYPE_OPERATOR, $char);
+        } elseif ($char == self::COMMENT_BEGIN[0]) {
+            $char = $this->nextChar(false);
+            if ($char == self::COMMENT_BEGIN[1]) {
+                $comment = $this->nextComment();
+
+                return new Token(Token::TYPE_COMMENT, $comment);
+            } else {
+                throw new Exception('数据不合法');
+            }
         } else {
             $this->index--;
 
@@ -123,6 +131,27 @@ class Scanner extends Parser\Scanner
         throw new Exception('');
     }
 
+    public function nextComment() : string
+    {
+        $begin = $this->index;
+        while ($begin < $this->len) {
+            $end = strpos($this->sql, self::COMMENT_END, $begin);
+            if ($end === false) {
+                throw new Exception('');
+            }
+            if ($end < $this->index) {
+                throw new Exception('');
+            }
+
+            $value = substr($this->sql, $this->index, $end - $this->index);
+            $this->index = $end + 2;
+
+            return trim($value);
+        }
+
+        throw new Exception('');
+    }
+
     public function nextChar(bool $skipEmpty = false) : ?string
     {
         while ($this->index < $this->len) {
@@ -145,10 +174,10 @@ class Scanner extends Parser\Scanner
             $token = array_pop($this->tokenCache);
             switch ($token->type) {
                 case Token::TYPE_STRING:
-                    $sql .= '\'' . self::escape($token->value, '\'') . '\' ';
+                    $sql .= '\'' . str_replace('\'', '\'\'', $token->value) . '\' ';
                     break;
-                case Token::TYPE_FIELD:
-                    $sql .= '`' . self::escape($token->value, '`') . '` ';
+                case Token::TYPE_COMMENT:
+                    $sql .= '/*' . $token->value . '*/ ';
                     break;
                 case Token::TYPE_OPERATOR:
                     $sql .= $token->value;

@@ -81,6 +81,10 @@ abstract class Driver
                     throw new Exception('数据库未配置');
                 }
             }
+
+            $this->config['username'] ??= null;
+            $this->config['password'] ??= null;
+
             $this->pdo = new PDO($this->config['dsn'], $this->config['username'], $this->config['password'], $this->option);
         } catch (\Exception $ex) {
             throw new Exception('数据库连接失败：' . $ex->getMessage());
@@ -90,11 +94,15 @@ abstract class Driver
     /**
      * @param mixed $query
      */
-    public function queryOne($query, int $fetch = self::FETCH_ASSOC) : array
+    public function queryOne($query, int $fetch = self::FETCH_ASSOC) : ?array
     {
         $stm = $this->execute($query);
         $data = $stm->fetch($fetch);
         $stm->closeCursor();
+
+        if ($data === false) {
+            return null;
+        }
 
         return $data;
     }
@@ -108,6 +116,10 @@ abstract class Driver
         $data = $stm->fetchAll($fetch);
         $stm->closeCursor();
 
+        if ($data === false) {
+            throw new Exception('查询失败');
+        }
+
         return $data;
     }
 
@@ -119,6 +131,10 @@ abstract class Driver
         $stm = $this->execute($query);
         $data = $stm->fetchAll($fetch);
         $stm->closeCursor();
+
+        if ($data === false) {
+            throw new Exception('查询失败');
+        }
 
         $hash = [];
         $count = 0;

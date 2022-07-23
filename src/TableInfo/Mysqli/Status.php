@@ -20,6 +20,7 @@
 namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
+use Minifw\DB\Parser\Scanner;
 use Minifw\DB\TableDiff;
 
 class Status
@@ -50,31 +51,34 @@ class Status
         foreach ($fields as $name) {
             if (isset($cfg[$name])) {
                 $this->set($name, $cfg[$name]);
-            } else {
-                $this->set($name, '');
             }
         }
     }
 
     public function set(string $name, $value) : void
     {
-        $required = [
+        $fields = [
             'engine' => true,
             'charset' => true,
             'collate' => true,
             'checksum' => false,
-            'comment' => false,
             'rowFormat' => false,
         ];
 
-        if (!is_string($value) || $value === '') {
-            if ($required[$name]) {
-                throw new Exception('数据不合法' . $name . '=>' . $value);
+        if (isset($fields[$name])) {
+            if (is_string($value) && $value !== '') {
+                $this->{$name} = strtolower($value);
+            } elseif ($fields[$name]) {
+                throw new Exception('数据不合法');
             } else {
                 $this->{$name} = '';
             }
+        } elseif ($name == 'comment') {
+            if (is_string($value)) {
+                $this->{$name} = $value;
+            }
         } else {
-            $this->{$name} = strtolower($value);
+            throw new Exception('数据不合法');
         }
     }
 
@@ -83,10 +87,7 @@ class Status
         $required = [
             'engine' => true,
             'charset' => true,
-            'collate' => true,
-            'comment' => false,
-            'checksum' => false,
-            'rowFormat' => false,
+            'collate' => true
         ];
 
         foreach ($required as $name => $require) {
@@ -111,7 +112,7 @@ class Status
         }
 
         if (!empty($this->comment)) {
-            $sql .= ' COMMENT=\'' . $this->comment . '\'';
+            $sql .= ' COMMENT=\'' . Scanner::escape($this->comment, '\'') . '\'';
         }
 
         return $sql;
@@ -147,7 +148,7 @@ class Status
 
         if ($old->engine != $this->engine) {
             $diff->addDisplay('- ENGINE=' . $old->engine . "\n" . '+ ENGINE=' . $this->engine);
-            $diff->addTrans('ALTER TABLE `' . $tbname . '` ENGINE=' . $this->engine);
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($tbname, '`') . '` ENGINE=' . $this->engine);
         }
 
         if ($old->charset != $this->charset || $old->collate != $this->collate) {
@@ -155,17 +156,17 @@ class Status
             $to_charset = 'DEFAULT CHARSET=' . $this->charset . ' COLLATE ' . $this->collate;
 
             $diff->addDisplay('- ' . $from_charset . "'\n" . '+ ' . $to_charset);
-            $diff->addTrans('ALTER TABLE `' . $tbname . '` ' . $to_charset);
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($tbname, '`') . '` ' . $to_charset);
         }
 
         if ($old->comment != $this->comment) {
             if ($old->comment !== '') {
-                $diff->addDisplay('- COMMENT=\'' . strval($old->comment) . '\'');
+                $diff->addDisplay('- COMMENT=\'' . Scanner::escape($old->comment, '\'') . '\'');
             }
             if ($this->comment !== '') {
-                $diff->addDisplay('+ COMMENT=\'' . strval($this->comment) . '\'');
+                $diff->addDisplay('+ COMMENT=\'' . Scanner::escape($this->comment, '\'') . '\'');
             }
-            $diff->addTrans('ALTER TABLE `' . $tbname . '` COMMENT=\'' . str_replace('\'', '\'\'', strval($this->comment)) . '\'');
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($tbname, '`') . '` COMMENT=\'' . Scanner::escape($this->comment, '\'') . '\'');
         }
 
         if ($this->checksum !== '' && $old->checksum != $this->checksum) {
@@ -173,7 +174,7 @@ class Status
                 $diff->addDisplay('- CHECKSUM=' . $old->checksum);
             }
             $diff->addDisplay('+ CHECKSUM=' . $this->checksum);
-            $diff->addTrans('ALTER TABLE `' . $tbname . '` CHECKSUM=' . $this->checksum);
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($tbname, '`') . '` CHECKSUM=' . $this->checksum);
         }
 
         if ($this->rowFormat !== '' && $old->rowFormat != $this->rowFormat) {
@@ -181,7 +182,7 @@ class Status
                 $diff->addDisplay('- ROW_FORMAT=' . $old->rowFormat);
             }
             $diff->addDisplay('+ ROW_FORMAT=' . $this->rowFormat);
-            $diff->addTrans('ALTER TABLE `' . $tbname . '` ROW_FORMAT=' . $this->rowFormat);
+            $diff->addTrans('ALTER TABLE `' . Scanner::escape($tbname, '`') . '` ROW_FORMAT=' . $this->rowFormat);
         }
     }
 }

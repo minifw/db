@@ -1,0 +1,55 @@
+{
+    "type": "table",
+    "tbname": "table1",
+    "status": {
+        "rowid": true,
+        "comment": "table1"
+    },
+    "field": [
+        {
+            "name": "id",
+            "type": "int",
+            "autoIncrement": true,
+            "comment": "ID"
+        },
+        {
+            "name": "no",
+            "type": "text",
+            "comment": "编号"
+        },
+        {
+            "name": "name",
+            "type": "text",
+            "comment": "姓名"
+        },
+        {
+            "name": "age",
+            "type": "integer",
+            "comment": "年龄"
+        },
+        {
+            "name": "address",
+            "type": "text",
+            "default": "",
+            "comment": "地址"
+        },
+        {
+            "name": "money",
+            "type": "real",
+            "default": "0",
+            "comment": "余额"
+        }
+    ],
+    "index": [
+        {
+            "name": "PRIMARY",
+            "fields": ["id"],
+            "comment": "主键"
+        },
+        {
+            "name": "table1_no",
+            "unique": true,
+            "fields": ["no"]
+        }
+    ]
+}

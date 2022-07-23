@@ -19,6 +19,8 @@
 
 namespace Minifw\DB;
 
+use Minifw\Common\Exception;
+
 class TableUtils
 {
     public static function exportAllDb(Driver $drvier, string $dir, int $format = self::FORMAT_JSON, $table_list = '') : void
@@ -82,30 +84,45 @@ class TableUtils
         return $newCfg->cmp($oldCfg);
     }
 
-    public static function obj2dbApplyAll(Driver $driver, string $namespace = '', string $classPath = '') : void
+    public static function obj2dbApplyAll(Driver $driver, string $namespace = '', string $classPath = '', $useTransaction = false) : void
     {
         if ($classPath == '' || !is_dir($classPath)) {
             return;
         }
 
-        $list = scandir($classPath);
-        foreach ($list as $file) {
-            if ($file == '.' || $file == '..') {
-                continue;
+        try {
+            if ($useTransaction) {
+                $driver->begin();
             }
-            if (is_dir($classPath . '/' . $file)) {
-                self::obj2dbApplyAll($driver, $namespace . '\\' . $file, $classPath . '/' . $file);
-            } else {
-                if (substr($file, -4, 4) !== '.php') {
+
+            $list = scandir($classPath);
+            foreach ($list as $file) {
+                if ($file == '.' || $file == '..') {
                     continue;
                 }
-                $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
-                require_once($classPath . '/' . $file);
+                if (is_dir($classPath . '/' . $file)) {
+                    self::obj2dbApplyAll($driver, $namespace . '\\' . $file, $classPath . '/' . $file, false);
+                } else {
+                    if (substr($file, -4, 4) !== '.php') {
+                        continue;
+                    }
+                    $classname = $namespace . '\\' . substr($file, 0, strlen($file) - 4);
+                    require_once($classPath . '/' . $file);
 
-                $newCfg = TableInfo::loadFromClass($classname);
-                $diff = self::dbCmp($driver, $newCfg);
-                $diff->apply($driver);
+                    $newCfg = TableInfo::loadFromClass($classname);
+                    $diff = self::dbCmp($driver, $newCfg);
+                    $diff->apply($driver);
+                }
             }
+
+            if ($useTransaction) {
+                $driver->commit();
+            }
+        } catch (Exception $ex) {
+            if ($useTransaction) {
+                $driver->rollback();
+            }
+            throw $ex;
         }
     }
 
@@ -147,28 +164,43 @@ class TableUtils
         return $diff;
     }
 
-    public static function file2dbApplyAll(Driver $driver, string $dir, int $format = Info::FORMAT_JSON) : void
+    public static function file2dbApplyAll(Driver $driver, string $dir, int $format = Info::FORMAT_JSON, $useTransaction = false) : void
     {
         $dir = rtrim($dir, '/\\');
         if (empty($dir) || !file_exists($dir)) {
             return;
         }
 
-        $file_list = scandir($dir);
-
-        foreach ($file_list as $file) {
-            if ($file === '.' || $file === '..') {
-                continue;
+        try {
+            if ($useTransaction) {
+                $driver->begin();
             }
 
-            $path = $dir . '/' . $file;
-            if (!is_file($path)) {
-                continue;
+            $file_list = scandir($dir);
+
+            foreach ($file_list as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+
+                $path = $dir . '/' . $file;
+                if (!is_file($path)) {
+                    continue;
+                }
+
+                $newCfg = TableInfo::loadFromFile($driver, $path, $format);
+                $diff = self::dbCmp($driver, $newCfg);
+                $diff->apply($driver, $useTransaction);
             }
 
-            $newCfg = TableInfo::loadFromFile($driver, $path, $format);
-            $diff = self::dbCmp($driver, $newCfg);
-            $diff->apply($driver);
+            if ($useTransaction) {
+                $driver->commit();
+            }
+        } catch (Exception $ex) {
+            if ($useTransaction) {
+                $driver->rollback();
+            }
+            throw $ex;
         }
     }
 

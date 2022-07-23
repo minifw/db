@@ -1,5 +1,11 @@
 --TEST--
 Query Mysqli sql build test
+--SKIPIF--
+<?php
+require __DIR__ . '/../../bootstrap.php';
+if (empty($config['mysqli'])) {
+    die('skip');
+} ?>
 --CAPTURE_STDIO--
 STDOUT
 --FILE--
@@ -9,7 +15,7 @@ require __DIR__ . '/../../bootstrap.php';
 use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
 
-$driver = new Mysqli($config['mysql']);
+$driver = new Mysqli($config['mysqli']);
 Query::setDefaultDriver($driver);
 
 echo Query::get()

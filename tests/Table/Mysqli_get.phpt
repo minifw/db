@@ -1,5 +1,11 @@
 --TEST--
 Table get test
+--SKIPIF--
+<?php
+require __DIR__ . '/../bootstrap.php';
+if (empty($config['mysqli'])) {
+    die('skip');
+} ?>
 --CAPTURE_STDIO--
 STDOUT
 --FILE--
@@ -10,7 +16,7 @@ use Minifw\DB\Driver\Mysqli;
 use Minifw\DB\Query;
 use Minifw\DB\Table;
 
-$driver = new Mysqli($config['mysql']);
+$driver = new Mysqli($config['mysqli']);
 Query::setDefaultDriver($driver);
 
 class Table1 extends Table

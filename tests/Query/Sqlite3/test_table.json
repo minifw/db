@@ -1,0 +1,67 @@
+{
+    "type": "table",
+    "tbname": "test_table",
+    "status": {
+        "rowid": true,
+        "comment": "测试表"
+    },
+    "field": [
+        {
+            "name": "id",
+            "type": "integer",
+            "autoIncrement": true,
+            "comment": "ID"
+        },
+        {
+            "name": "no",
+            "type": "text",
+            "comment": "号码"
+        },
+        {
+            "name": "age",
+            "type": "integer",
+            "comment": "年龄"
+        },
+        {
+            "name": "name",
+            "type": "text",
+            "comment": "姓名"
+        },
+        {
+            "name": "address",
+            "type": "text",
+            "default": "",
+            "comment": "地址"
+        },
+        {
+            "name": "code",
+            "type": "real",
+            "default": "0",
+            "comment": "代码"
+        },
+        {
+            "name": "money",
+            "type": "blob",
+            "default": "0",
+            "comment": "账户余额"
+        }
+    ],
+    "index": [
+        {
+            "name": "PRIMARY",
+            "fields": ["id"],
+            "comment": "主键"
+        },
+        {
+            "name": "no",
+            "unique": true,
+            "fields": ["no"],
+            "comment": "号码"
+        },
+        {
+            "name": "name",
+            "fields": ["name", "age"],
+            "comment": "姓名"
+        }
+    ]
+}

@@ -21,6 +21,7 @@ namespace Minifw\DB\TableInfo\Mysqli;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
+use Minifw\DB\Parser\Scanner;
 use Minifw\DB\TableDiff;
 use Minifw\DB\TableInfo;
 
@@ -39,21 +40,12 @@ class View extends TableInfo
             return;
         }
 
-        if (!isset($info['algorithm'])) {
-            throw new Exception('数据不合法');
+        $fields = ['algorithm', 'security', 'sql'];
+        foreach ($fields as $name) {
+            if (isset($info[$name])) {
+                $this->set($name, $info[$name]);
+            }
         }
-
-        if (!isset($info['security'])) {
-            throw new Exception('数据不合法');
-        }
-
-        if (!isset($info['sql'])) {
-            throw new Exception('数据不合法');
-        }
-
-        $this->set('algorithm', $info['algorithm']);
-        $this->set('security', $info['security']);
-        $this->set('sql', $info['sql']);
     }
 
     public function set(string $name, $value) : void
@@ -96,7 +88,7 @@ class View extends TableInfo
         $sql = 'CREATE ALGORITHM=' . $this->algorithm .
         ' DEFINER=' . $user .
         ' SQL SECURITY ' . $this->security .
-        ' VIEW `' . $this->tbname . '` AS ' . $this->sql;
+        ' VIEW `' . Scanner::escape($this->tbname, '`') . '` AS ' . $this->sql;
 
         return $sql;
     }
@@ -165,7 +157,7 @@ class View extends TableInfo
         }
 
         if ($changed) {
-            $diff->addTrans('DROP VIEW IF EXISTS `' . $this->tbname . '`');
+            $diff->addTrans('DROP VIEW IF EXISTS `' . Scanner::escape($this->tbname, '`') . '`');
             $diff->addTrans($this->toSql());
         }
     }

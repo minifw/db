@@ -21,6 +21,9 @@ namespace Minifw\DB\Driver;
 
 use Minifw\Common\Exception;
 use Minifw\DB\Driver;
+use Minifw\DB\Parser\Sqlite3\CreateIndex;
+use Minifw\DB\Parser\Sqlite3\CreateTable;
+use Minifw\DB\Parser\Sqlite3\Scanner;
 use Minifw\DB\TableInfo;
 
 class Sqlite3 extends Driver
@@ -67,6 +70,12 @@ class Sqlite3 extends Driver
             throw new Exception('数据库未配置');
         }
 
+        if (!defined('APP_ROOT')) {
+            throw new Exception('APP_ROOT未配置');
+        }
+
+        $file = APP_ROOT . $file;
+
         return 'sqlite:' . $file;
     }
 
@@ -89,25 +98,54 @@ class Sqlite3 extends Driver
         return $tables;
     }
 
-    public function showCreate(string $table) : string
+    public function showCreate(string $table) : ?string
     {
-        $sql = 'select `sql` from `sqlite_master` where `type`=\'table\' and `name`=\'' . $table . '\';';
-        $data = $this->query($sql, self::FETCH_NUM);
-        if (empty($data)) {
-            throw new Exception('数据表不存在');
-        }
+        try {
+            $sql = 'select `sql` from `sqlite_master` where `type`=\'table\' and `name`=\'' . $table . '\';';
+            $data = $this->queryOne($sql, self::FETCH_NUM);
+            if (empty($data)) {
+                return null;
+            }
 
-        return $data[0];
+            return $data[0];
+        } catch (Exception $ex) {
+            return null;
+        }
     }
 
-    public function getTableInfo(string $table) : TableInfo
+    public function getIndex(string $table) : array
+    {
+        try {
+            $sql = 'select `sql` from `sqlite_master` where `type`=\'index\' and `tbl_name`=\'' . $table . '\';';
+            $data = $this->query($sql, self::FETCH_NUM);
+            if (empty($data)) {
+                return [];
+            }
+
+            return $data;
+        } catch (Exception $ex) {
+            return [];
+        }
+    }
+
+    public function getTableInfo(string $table) : ?TableInfo
     {
         $create_sql = $this->showCreate($table);
+        if ($create_sql === null) {
+            return null;
+        }
 
-        $parser = new SqliteCreate();
-        $parser->init($create_sql);
-        $info = $parser->parse();
+        $scaner = new Scanner($create_sql);
+        $parser = new CreateTable($scaner);
+        $obj = $parser->parse($this);
 
-        return $info;
+        $indexList = $this->getIndex($table);
+        foreach ($indexList as $index) {
+            $scaner = new Scanner($index[0]);
+            $parser = new CreateIndex($scaner);
+            $parser->parse($obj);
+        }
+
+        return $obj;
     }
 }
