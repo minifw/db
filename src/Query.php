@@ -558,45 +558,45 @@ class Query
 
     //////////////////////////////////////////////
 
-    protected function _parseOpt(string $key, array $valueList, string $fkey) : string
+    protected function _parseOpt(string $key, array $value, string $fkey) : string
     {
-        $valueList[0] = strval($valueList[0]);
-        switch ($valueList[0]) {
+        $value[0] = strval($value[0]);
+        switch ($value[0]) {
             case '>':
             case '<':
             case '=':
             case '>=':
             case '<=':
             case '<>':
-                $bind_key = $this->doBind($key, strval($valueList[1]));
+                $bind_key = $this->doBind($key, strval($value[1]));
 
-                return $fkey . $valueList[0] . ':' . $bind_key;
+                return $fkey . $value[0] . ':' . $bind_key;
             case 'between':
-                $bind_key_min = $this->doBind($key . '_min', strval($valueList[1]));
-                $bind_key_max = $this->doBind($key . '_max', strval($valueList[2]));
+                $bind_key_min = $this->doBind($key . '_min', strval($value[1]));
+                $bind_key_max = $this->doBind($key . '_max', strval($value[2]));
 
                 return $fkey . ' between :' . $bind_key_min . ' and :' . $bind_key_max;
             case 'have':
-                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($valueList[1]) . '%');
+                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($value[1]) . '%');
 
                 return $fkey . ' like :' . $bind_key;
             case 'end':
-                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($valueList[1]));
+                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($value[1]));
 
                 return $fkey . ' like :' . $bind_key;
             case 'begin':
-                $bind_key = $this->doBind($key, $this->driver->escapeLike($valueList[1]) . '%');
+                $bind_key = $this->doBind($key, $this->driver->escapeLike($value[1]) . '%');
 
                 return $fkey . ' like :' . $bind_key;
             case 'nohave':
-                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($valueList[1]) . '%');
+                $bind_key = $this->doBind($key, '%' . $this->driver->escapeLike($value[1]) . '%');
 
                 return $fkey . ' not like :' . $bind_key;
             case 'in':
-                if (is_array($valueList[1])) {
-                    return $fkey . ' in (' . implode(',', $this->driver->quoteValue($valueList[1], true)) . ')';
-                } elseif ($valueList[1] instanceof Query) {
-                    $sub = $valueList[1];
+                if (is_array($value[1])) {
+                    return $fkey . ' in (' . implode(',', $this->driver->quoteValue($value[1], true)) . ')';
+                } elseif ($value[1] instanceof Query) {
+                    $sub = $value[1];
 
                     if ($this->parent !== null) {
                         $sql = $sub->buildSql($this->parent);
