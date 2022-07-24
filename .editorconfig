@@ -4,7 +4,7 @@ php_diagnostic = off
 php_diagnostic = off
 [/tmp/*]
 php_diagnostic = off
-[.*]
+[\.*]
 php_diagnostic = off
 [*.phpt]
 php_diagnostic_php2432 = off

@@ -185,22 +185,22 @@ class Query
     {
         switch ($this->type) {
             case self::TYPE_SELECT_ALL:
-                $result = $this->driver->query($sql, $param);
+                $result = $this->driver->query($sql, Driver::FETCH_ASSOC, $param);
 
                 return $result;
             case self::TYPE_SELECT_COUNT:
-                $result = $this->driver->queryOne($sql, $param);
+                $result = $this->driver->queryOne($sql, Driver::FETCH_ASSOC, $param);
                 if (empty($result)) {
                     return 0;
                 }
 
                 return $result[0];
             case self::TYPE_SELECT_FIRST:
-                $result = $this->driver->queryOne($sql, $param);
+                $result = $this->driver->queryOne($sql, Driver::FETCH_ASSOC, $param);
 
                 return $result;
             case self::TYPE_SELECT_HASH:
-                $result = $this->driver->queryHash($sql, $param);
+                $result = $this->driver->queryHash($sql, Driver::FETCH_ASSOC, $param);
 
                 return $result;
             default:
