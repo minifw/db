@@ -181,33 +181,30 @@ class Query
         }
     }
 
-    /**
-     * @return mixed
-     */
-    public function query(string $sql)
+    public function query(string $sql, ?array $param = null)
     {
         switch ($this->type) {
             case self::TYPE_SELECT_ALL:
-                $result = $this->driver->query($sql);
+                $result = $this->driver->query($sql, $param);
 
                 return $result;
             case self::TYPE_SELECT_COUNT:
-                $result = $this->driver->queryOne($sql);
+                $result = $this->driver->queryOne($sql, $param);
                 if (empty($result)) {
                     return 0;
                 }
 
                 return $result[0];
             case self::TYPE_SELECT_FIRST:
-                $result = $this->driver->queryOne($sql);
+                $result = $this->driver->queryOne($sql, $param);
 
                 return $result;
             case self::TYPE_SELECT_HASH:
-                $result = $this->driver->queryHash($sql);
+                $result = $this->driver->queryHash($sql, $param);
 
                 return $result;
             default:
-                $this->driver->exec($sql);
+                $this->driver->exec($sql, $param);
 
                 return null;
         }
@@ -232,10 +229,6 @@ class Query
         return $this;
     }
 
-    /**
-     * @param mixed $joinStr
-     * @return Query
-     */
     public function join($joinStr) : self
     {
         $this->joinStr = $joinStr;
@@ -243,9 +236,6 @@ class Query
         return $this;
     }
 
-    /**
-     * @param mixed $whereList
-     */
     public function where($whereList, bool $isOr = false) : self
     {
         $this->whereList = $whereList;
@@ -258,9 +248,6 @@ class Query
         return $this;
     }
 
-    /**
-     * @param mixed $groupList
-     */
     public function group($groupList) : self
     {
         $this->groupList = $groupList;
@@ -268,9 +255,6 @@ class Query
         return $this;
     }
 
-    /**
-     * @param mixed $orderList
-     */
     public function order($orderList) : self
     {
         $this->orderList = $orderList;
@@ -293,9 +277,6 @@ class Query
         return $this;
     }
 
-    /**
-     * @param mixed $fieldList
-     */
     public function select($fieldList) : self
     {
         $this->fieldList = $fieldList;
@@ -660,26 +641,11 @@ class Query
     protected string $alis;
     ///////////////////
 
-    /**
-     * @var mixed
-     */
     protected $fieldList = [];
     protected string $joinStr = '';
-
-    /**
-     * @var mixed
-     */
     protected $whereList = [];
     protected bool $isOr = false;
-
-    /**
-     * @var mixed
-     */
     protected $groupList = [];
-
-    /**
-     * @var mixed
-     */
     protected $orderList = [];
     protected array $valueList = [];
     protected bool $isLock = false;

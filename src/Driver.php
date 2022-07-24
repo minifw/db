@@ -94,9 +94,9 @@ abstract class Driver
     /**
      * @param mixed $query
      */
-    public function queryOne($query, int $fetch = self::FETCH_ASSOC) : ?array
+    public function queryOne($query, int $fetch = self::FETCH_ASSOC, ?array $param = null) : ?array
     {
-        $stm = $this->execute($query);
+        $stm = $this->execute($query, $param);
         $data = $stm->fetch($fetch);
         $stm->closeCursor();
 
@@ -110,9 +110,9 @@ abstract class Driver
     /**
      * @param mixed $query
      */
-    public function query($query, int $fetch = self::FETCH_ASSOC) : array
+    public function query($query, int $fetch = self::FETCH_ASSOC, ?array $param = null) : array
     {
-        $stm = $this->execute($query);
+        $stm = $this->execute($query, $param);
         $data = $stm->fetchAll($fetch);
         $stm->closeCursor();
 
@@ -126,9 +126,9 @@ abstract class Driver
     /**
      * @param mixed $query
      */
-    public function queryHash($query, int $fetch = self::FETCH_ASSOC) : array
+    public function queryHash($query, int $fetch = self::FETCH_ASSOC, ?array $param = null) : array
     {
-        $stm = $this->execute($query);
+        $stm = $this->execute($query, $param);
         $data = $stm->fetchAll($fetch);
         $stm->closeCursor();
 
@@ -169,9 +169,9 @@ abstract class Driver
     /**
      * @param mixed $query
      */
-    public function exec($query) : bool
+    public function exec($query, ?array $param = null) : bool
     {
-        $this->execute($query);
+        $this->execute($query, $param);
 
         return true;
     }
@@ -180,13 +180,13 @@ abstract class Driver
      * @param mixed $query
      * @throws Exception
      */
-    public function execute($query) : \PDOStatement
+    public function execute($query, ?array $param = null) : \PDOStatement
     {
         $sql = '';
         try {
             if (is_string($query)) {
                 $sql = $query;
-                $bind = null;
+                $bind = $param;
             } else {
                 $sql = $query->buildSql();
                 $bind = $query->buildBind();
