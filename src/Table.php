@@ -29,7 +29,10 @@ abstract class Table
     public static array $index = [];
     protected Driver $driver;
 
-    public static function get(?Driver $driver = null, ...$args) : Table
+    /**
+     * @return static
+     */
+    public static function get(?Driver $driver = null, ...$args)
     {
         return new static($driver, ...$args);
     }
