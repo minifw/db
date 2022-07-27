@@ -70,12 +70,6 @@ class Sqlite3 extends Driver
             throw new Exception('数据库未配置');
         }
 
-        if (!defined('APP_ROOT')) {
-            throw new Exception('APP_ROOT未配置');
-        }
-
-        $file = APP_ROOT . $file;
-
         return 'sqlite:' . $file;
     }
 
