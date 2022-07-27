@@ -114,7 +114,7 @@ class Table extends TableInfo
         }
     }
 
-    protected function toArray() : array
+    public function toArray() : array
     {
         $this->validate();
 

@@ -63,7 +63,7 @@ class View extends TableInfo
         }
     }
 
-    protected function toArray() : array
+    public function toArray() : array
     {
         $ret = parent::toArray();
 
