@@ -136,7 +136,7 @@ CREATE UNIQUE INDEX `table1_no` on `table1` (`phone`);
 - `address` text COLLATE binary NOT NULL DEFAULT '' /* 地址 */
 =============================
 PRAGMA foreign_keys='0';
-CREATE TABLE IF NOT EXISTS `tmp_table2_0` ( /* table2 */
+CREATE TABLE IF NOT EXISTS `tmp_table2_0` /* table2 */ (
 `main_id` integer NOT NULL /* 顶级ID */,
 `sub_id` integer NOT NULL /* 子ID */,
 `no` text COLLATE binary NOT NULL /* 编号 */,

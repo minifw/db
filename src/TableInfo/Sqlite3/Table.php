@@ -148,12 +148,12 @@ class Table extends TableInfo
             $tbname = $tmpname;
         }
 
-        $sql = 'CREATE TABLE IF NOT EXISTS `' . Scanner::escape($tbname, '`') . '` (';
+        $sql = 'CREATE TABLE IF NOT EXISTS `' . Scanner::escape($tbname, '`') . '`';
 
         if ($this->status->comment !== '') {
             $sql .= ' /* ' . $this->status->comment . ' */';
         }
-        $sql .= $dim;
+        $sql .= ' (' . $dim;
 
         $innerSql = [];
         $autoIncrement = null;

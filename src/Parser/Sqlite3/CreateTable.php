@@ -64,6 +64,8 @@ class CreateTable
         $tbname = $this->scaner->nextTokenAs(Token::TYPE_STRING);
         $this->obj->set('tbname', $tbname);
 
+        $status = new Status();
+
         while (true) {
             $token = $this->scaner->nextToken();
             if ($token === null) {
@@ -74,16 +76,11 @@ class CreateTable
                 continue;
             } elseif ($token->is(Token::TYPE_OPERATOR, '(')) {
                 break;
+            } elseif ($token->type === Token::TYPE_COMMENT) {
+                $status->set('comment', $token->value);
             } else {
                 throw new Exception('');
             }
-        }
-
-        $status = new Status();
-
-        $comment = $this->scaner->nextTokenAs(Token::TYPE_COMMENT, false);
-        if ($comment !== null) {
-            $status->set('comment', $comment);
         }
 
         return $status;
