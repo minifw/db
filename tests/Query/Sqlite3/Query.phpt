@@ -44,7 +44,8 @@ $data = [
 ];
 
 foreach ($data as $v) {
-    Query::get('test_table')->insert($v)->exec();
+    $id = Query::get('test_table')->insert($v)->exec();
+    echo $id . "\n";
 }
 
 function print_result($result)
@@ -122,6 +123,12 @@ echo json_encode($result, JSON_UNESCAPED_UNICODE) . "\n\n";
 --EXPECT--
 bool(true)
 
+1
+2
+3
+4
+5
+6
 select * from `test_table`;
 1:0001:26:张三::123.0:100.00
 2:0002:55:李四:北京:10.25:200.00

@@ -167,11 +167,11 @@ class Query
             case self::TYPE_INSERT:
                 $this->driver->exec($this);
 
-                return null;
+                return $this->driver->lastInsertId();
             case self::TYPE_REPLACE:
                 $this->driver->exec($this);
 
-                return null;
+                return $this->driver->lastInsertId();
             case self::TYPE_UPDATE:
                 $this->driver->exec($this);
 
