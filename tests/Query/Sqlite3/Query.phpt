@@ -57,7 +57,6 @@ function print_result($result)
     echo "\n";
 }
 
-
 $query = Query::get('test_table')->count();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
@@ -125,6 +124,17 @@ echo $query->dumpSql() . "\n";
 $result = $query->exec();
 echo json_encode($result, JSON_UNESCAPED_UNICODE) . "\n\n";
 
+$result = Query::get('test_table')->all()->map(function ($data) {
+    if ($data['id'] == 3) {
+        return null;
+    }
+
+    return $data['no'] . '|' . $data['id'];
+});
+foreach ($result as $value) {
+    echo $value . "\n";
+}
+
 ?>
 --EXPECT--
 bool(true)
@@ -184,3 +194,9 @@ select `id`,`name` from `test_table` where `id` in ('1','3','5') or `age`<:age o
 
 select `id`,`name` from `test_table` where `id` in ('1','3','5') or `id`=:id or `age`<:age order by id; [id:2, age:50]
 {"1":"张三","2":"李四","3":"王五","4":"赵六","5":"李华","6":"韩梅梅"}
+
+0001|1
+0002|2
+0004|4
+0005|5
+0006|6

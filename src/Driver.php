@@ -166,6 +166,23 @@ abstract class Driver
         return $hash;
     }
 
+    public function map(callable $callback, $query, int $fetch = self::FETCH_ASSOC, ?array $param = null) : array
+    {
+        $stm = $this->execute($query, $param);
+
+        $result = [];
+        while (($data = $stm->fetch($fetch)) !== false) {
+            $val = call_user_func($callback, $data);
+            if ($val !== null) {
+                $result[] = $val;
+            }
+        }
+
+        $stm->closeCursor();
+
+        return $result;
+    }
+
     /**
      * @param mixed $query
      */

@@ -181,6 +181,15 @@ class Query
         }
     }
 
+    public function map(callable $callback) : array
+    {
+        if ($this->type !== self::TYPE_SELECT_ALL) {
+            throw new Exception('参数不合法');
+        }
+
+        return $this->driver->map($callback, $this, $this->fetch);
+    }
+
     public function query(string $sql, ?array $param = null)
     {
         switch ($this->type) {
