@@ -57,6 +57,12 @@ function print_result($result)
     echo "\n";
 }
 
+
+$query = Query::get('test_table')->count();
+echo $query->dumpSql() . "\n";
+$result = $query->exec();
+var_dump($result);
+
 $query = Query::get('test_table')->select([])->all();
 echo $query->dumpSql() . "\n";
 $result = $query->exec();
@@ -129,6 +135,8 @@ bool(true)
 4
 5
 6
+select count(*) from `test_table`;
+int(6)
 select * from `test_table`;
 1:0001:26:张三::123.0:100.00
 2:0002:55:李四:北京:10.25:200.00

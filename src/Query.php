@@ -142,22 +142,22 @@ class Query
     {
         switch ($this->type) {
             case self::TYPE_SELECT_ALL:
-                $result = $this->driver->query($this);
+                $result = $this->driver->query($this, $this->fetch);
 
                 return $result;
             case self::TYPE_SELECT_COUNT:
-                $result = $this->driver->queryOne($this);
+                $result = $this->driver->queryOne($this, Driver::FETCH_NUM);
                 if (empty($result)) {
                     return 0;
                 }
 
-                return $result[0];
+                return (int) $result[0];
             case self::TYPE_SELECT_FIRST:
-                $result = $this->driver->queryOne($this);
+                $result = $this->driver->queryOne($this, $this->fetch);
 
                 return $result;
             case self::TYPE_SELECT_HASH:
-                $result = $this->driver->queryHash($this);
+                $result = $this->driver->queryHash($this, $this->fetch);
 
                 return $result;
             case self::TYPE_DELETE:
@@ -185,22 +185,22 @@ class Query
     {
         switch ($this->type) {
             case self::TYPE_SELECT_ALL:
-                $result = $this->driver->query($sql, Driver::FETCH_ASSOC, $param);
+                $result = $this->driver->query($sql, $this->fetch, $param);
 
                 return $result;
             case self::TYPE_SELECT_COUNT:
-                $result = $this->driver->queryOne($sql, Driver::FETCH_ASSOC, $param);
+                $result = $this->driver->queryOne($sql, Driver::FETCH_NUM, $param);
                 if (empty($result)) {
                     return 0;
                 }
 
-                return $result[0];
+                return (int) $result[0];
             case self::TYPE_SELECT_FIRST:
-                $result = $this->driver->queryOne($sql, Driver::FETCH_ASSOC, $param);
+                $result = $this->driver->queryOne($sql, $this->fetch, $param);
 
                 return $result;
             case self::TYPE_SELECT_HASH:
-                $result = $this->driver->queryHash($sql, Driver::FETCH_ASSOC, $param);
+                $result = $this->driver->queryHash($sql, $this->fetch, $param);
 
                 return $result;
             default:
@@ -296,23 +296,32 @@ class Query
         return $this;
     }
 
-    public function first() : self
+    public function first(?int $fetch = null) : self
     {
         $this->type = self::TYPE_SELECT_FIRST;
+        if ($fetch !== null) {
+            $this->fetch = $fetch;
+        }
 
         return $this;
     }
 
-    public function all() : self
+    public function all(?int $fetch = null) : self
     {
         $this->type = self::TYPE_SELECT_ALL;
+        if ($fetch !== null) {
+            $this->fetch = $fetch;
+        }
 
         return $this;
     }
 
-    public function hash() : self
+    public function hash(?int $fetch = null) : self
     {
         $this->type = self::TYPE_SELECT_HASH;
+        if ($fetch !== null) {
+            $this->fetch = $fetch;
+        }
 
         return $this;
     }
@@ -652,6 +661,7 @@ class Query
     protected int $begin = 0;
     protected int $count = 0;
     protected int $type = 0;
+    protected int $fetch = Driver::FETCH_ASSOC;
     ///////////////////////
 
     protected array $bind = [];
